@@ -1,1 +1,4779 @@
-# TQuake
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TQuake</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<style>
+/* ====== 免责声明弹窗 ====== */
+#disclaimer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+}
+#disclaimer-overlay.hidden {
+    display: none;
+}
+#disclaimer-dialog {
+    background: #0f1a2b;
+    border: 1px solid #2a3f5a;
+    border-radius: 16px;
+    padding: 0;
+    width: 680px;
+    max-width: 92vw;
+    max-height: 88vh;
+    box-shadow: 0 12px 60px rgba(0,0,0,0.9);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: disclaimerFadeIn 0.4s ease;
+}
+@keyframes disclaimerFadeIn {
+    from { opacity: 0; transform: translateY(30px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+#disclaimer-dialog .disc-header {
+    background: linear-gradient(135deg, rgba(255,107,53,0.15), rgba(255,34,68,0.1));
+    padding: 18px 28px;
+    border-bottom: 1px solid rgba(255,107,53,0.2);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+#disclaimer-dialog .disc-header i {
+    font-size: 28px;
+    color: #ff6b35;
+}
+#disclaimer-dialog .disc-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffb347;
+    letter-spacing: 1px;
+}
+#disclaimer-dialog .disc-body {
+    padding: 24px 28px;
+    overflow-y: auto;
+    flex: 1;
+    font-size: 14px;
+    color: #b0ccee;
+    line-height: 1.9;
+    scrollbar-width: thin;
+}
+#disclaimer-dialog .disc-body::-webkit-scrollbar { width: 6px; }
+#disclaimer-dialog .disc-body::-webkit-scrollbar-track { background: rgba(26,35,50,0.5); border-radius: 4px; }
+#disclaimer-dialog .disc-body::-webkit-scrollbar-thumb { background: #3a4a6a; border-radius: 4px; }
+#disclaimer-dialog .disc-body .disc-intro {
+    color: #ffb347;
+    font-weight: 600;
+    margin-bottom: 18px;
+    font-size: 14px;
+}
+#disclaimer-dialog .disc-body .disc-section {
+    margin-bottom: 16px;
+}
+#disclaimer-dialog .disc-body .disc-section .disc-section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #e0e6f0;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+}
+#disclaimer-dialog .disc-body .disc-section .disc-section-title .disc-num {
+    color: #ff6b35;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+#disclaimer-dialog .disc-body .disc-section p {
+    color: #8aa4c8;
+    font-size: 13px;
+    line-height: 1.85;
+    margin: 0;
+    padding-left: 2px;
+}
+#disclaimer-dialog .disc-body .disc-section .disc-sub-items {
+    padding-left: 8px;
+    margin-top: 4px;
+}
+#disclaimer-dialog .disc-body .disc-section .disc-sub-items .disc-sub-item {
+    font-size: 13px;
+    color: #8aa4c8;
+    line-height: 1.8;
+}
+#disclaimer-dialog .disc-body .disc-law {
+    color: #ff6b35;
+    font-size: 13px;
+    margin-top: 6px;
+    font-style: italic;
+}
+#disclaimer-dialog .disc-footer {
+    padding: 16px 28px 20px;
+    border-top: 1px solid #1a2a40;
+    flex-shrink: 0;
+}
+#disclaimer-dialog .disc-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    user-select: none;
+}
+#disclaimer-dialog .disc-checkbox-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #ff6b35;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+#disclaimer-dialog .disc-checkbox-row label {
+    font-size: 14px;
+    color: #e0e6f0;
+    font-weight: 600;
+    cursor: pointer;
+}
+#disclaimer-dialog .disc-btns {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+}
+#disclaimer-dialog .disc-btns button {
+    padding: 10px 36px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+}
+#disclaimer-dialog .btn-enter {
+    background: #ff6b35;
+    color: #fff;
+}
+#disclaimer-dialog .btn-enter:hover {
+    background: #e55a28;
+    box-shadow: 0 4px 16px rgba(255,107,53,0.4);
+}
+#disclaimer-dialog .btn-enter:disabled {
+    background: #3a4a5a;
+    color: #6a7a8a;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+#disclaimer-dialog .btn-exit {
+    background: #2a3f5a;
+    color: #b0ccee;
+}
+#disclaimer-dialog .btn-exit:hover {
+    background: #3a4f6a;
+}
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+body {
+font-family: 'Segoe UI', 'PingFang SC', Roboto, 'Helvetica Neue', sans-serif;
+background: #0a0e17;
+color: #e0e6f0;
+height: 100vh;
+overflow: hidden;
+display: flex;
+flex-direction: column;
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: rgba(26,35,50,0.5); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #3a4a6a; border-radius: 4px; }
+.leaflet-interactive:focus, .leaflet-interactive:active { outline: none !important; stroke: inherit !important; }
+.leaflet-control-attribution { display: none !important; }
+.custom-tooltip {
+background: #1a2332 !important; border: 1px solid #3a5a7a !important; color: #e0e6f0 !important;
+border-radius: 4px !important; padding: 6px 12px !important; font-size: 13px !important;
+box-shadow: 0 2px 10px rgba(0,0,0,0.6) !important;
+}
+/* ====== 顶部标题栏 ====== */
+#header {
+background: linear-gradient(135deg, #0f1a2b, #1a2a40); padding: 8px 24px;
+display: flex; justify-content: space-between; align-items: center;
+border-bottom: 1px solid #2a3f5a; z-index: 1000; min-height: 56px; flex-shrink: 0;
+box-shadow: 0 2px 20px rgba(0,0,0,0.6);
+}
+#header .logo { display: flex; align-items: center; gap: 12px; }
+#header .logo i { font-size: 26px; color: #ff6b35; }
+#header .logo h1 {
+font-size: 20px; font-weight: 600;
+background: linear-gradient(90deg, #ff6b35, #ffb347);
+-webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px;
+}
+#header .status-bar { display: flex; align-items: center; gap: 20px; font-size: 13px; color: #8aa4c8; }
+.live-dot {
+display: inline-block; width: 10px; height: 10px; background: #00ff88; border-radius: 50%;
+margin-right: 6px; box-shadow: 0 0 12px #00ff88;
+}
+.time-display {
+background: #0f1a2b; padding: 4px 14px; border-radius: 20px; border: 1px solid #2a3f5a;
+font-family: Calibri, 'Segoe UI', 'PingFang SC', sans-serif; font-size: 14px; color: #b0ccee;
+}
+/* ====== 导航栏 ====== */
+#top-nav-bar {
+background: #0f1a2b;
+border-bottom: 1px solid #1a2a40;
+display: flex;
+align-items: center;
+padding: 0 8px;
+flex-shrink: 0;
+z-index: 1001;
+overflow-x: auto;
+}
+#top-nav-bar .nav-item {
+padding: 8px 16px;
+font-size: 13px;
+font-weight: 500;
+color: #6a8aaa;
+cursor: pointer;
+border-bottom: 2px solid transparent;
+transition: all 0.2s;
+white-space: nowrap;
+display: flex;
+align-items: center;
+gap: 5px;
+}
+#top-nav-bar .nav-item:hover {
+color: #b0ccee;
+background: #141f30;
+}
+#top-nav-bar .nav-item.active {
+color: #ffb347;
+border-bottom-color: #ff6b35;
+background: #141f30;
+}
+#top-nav-bar .nav-item i {
+font-size: 13px;
+}
+#main { display: flex; flex: 1; overflow: hidden; }
+#map-container { flex: 1; height: 100%; position: relative; background: #0a0e17; }
+#map-loading-overlay {
+position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+background: #0a0e17; z-index: 999; display: flex; flex-direction: column;
+justify-content: center; align-items: center; transition: opacity 0.5s ease;
+}
+#map-loading-overlay.fade-out { opacity: 0; pointer-events: none; }
+.loading-content { text-align: center; color: #8aa4c8; font-size: 28px; }
+.loading-content i { font-size: 64px; margin-bottom: 20px; }
+.progress-bar { width: 320px; height: 6px; background: #1a2a40; border-radius: 3px; margin-top: 16px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #ff6b35, #ffb347); border-radius: 3px; transition: width 0.3s; width: 0%; }
+#map { width: 100%; height: 100%; background: #0a0e17; }
+.leaflet-control-zoom { display: none !important; }
+.leaflet-popup-content-wrapper {
+background: #1a2332 !important; color: #e0e6f0 !important; border-radius: 8px !important;
+border: 1px solid #2a3f5a; box-shadow: 0 8px 30px rgba(0,0,0,0.8);
+}
+.leaflet-popup-tip { background: #1a2332 !important; }
+/* ====== 左上角最新地震信息面板 ====== */
+#latest-eq-panel {
+position: absolute; top: 15px; left: 15px; z-index: 1000;
+background: rgba(10, 14, 23, 0.55); border: 1px solid #2a3f5a;
+border-radius: 12px; padding: 0; width: 370px;
+box-shadow: 0 6px 30px rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+overflow: hidden; transition: all 0.3s ease;
+}
+#latest-eq-panel .lep-header {
+background: linear-gradient(135deg, rgba(255,107,53,0.15), rgba(255,179,71,0.08));
+padding: 10px 16px; border-bottom: 1px solid rgba(255,107,53,0.2);
+display: flex; align-items: center; gap: 8px; font-size: 13px;
+color: #ffb347; font-weight: 600; letter-spacing: 1px;
+}
+#latest-eq-panel .lep-header i { font-size: 14px; }
+#latest-eq-panel .lep-header .lep-report {
+font-size: 11px; color: #ff6b35; font-weight: 400;
+padding: 1px 6px; border-radius: 6px;
+background: rgba(255,107,53,0.2); margin-left: auto;
+}
+#latest-eq-panel .lep-body { padding: 14px 16px 8px; }
+
+#latest-eq-panel .lep-location-top {
+font-size: 16px; font-weight: 700; color: #e0e6f0; margin-bottom: 12px; line-height: 1.4;
+}
+#latest-eq-panel .lep-main-row {
+display: flex; align-items: flex-start; gap: 14px; margin-bottom: 10px;
+}
+#latest-eq-panel .lep-intensity-wrapper {
+position: relative;
+display: flex; flex-direction: column; align-items: center;
+padding: 8px 14px;
+border-radius: 10px;
+flex-shrink: 0;
+}
+#latest-eq-panel .lep-intensity-bg {
+position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+border-radius: 10px;
+opacity: 0.15;
+z-index: 0;
+}
+#latest-eq-panel .lep-intensity-big {
+font-size: 42px; font-weight: 800; line-height: 1; position: relative; z-index: 1;
+}
+#latest-eq-panel .lep-intensity-unit {
+font-size: 14px; font-weight: 600; margin-top: 2px; opacity: 0.8; position: relative; z-index: 1;
+}
+#latest-eq-panel .lep-side-info {
+display: flex; flex-direction: column; gap: 6px; padding-top: 4px; margin-left: 8px;
+}
+#latest-eq-panel .lep-mag-small {
+font-size: 16px; font-weight: 700; color: #b0ccee;
+display: flex; align-items: center; gap: 5px;
+}
+#latest-eq-panel .lep-mag-small i { font-size: 13px; color: #7a9aba; }
+#latest-eq-panel .lep-depth-small {
+font-size: 16px; font-weight: 700; color: #b0ccee;
+display: flex; align-items: center; gap: 5px;
+}
+#latest-eq-panel .lep-depth-small i { font-size: 13px; color: #7a9aba; }
+#latest-eq-panel .lep-location { font-size: 15px; font-weight: 600; color: #e0e6f0; margin-bottom: 8px; line-height: 1.4; }
+#latest-eq-panel .lep-loc-inline {
+font-size: 17px; font-weight: 700; color: #e0e6f0; line-height: 1.4;
+}
+#latest-eq-panel .lep-mag-depth-row {
+display: flex; align-items: center; justify-content: space-between; gap: 12px;
+overflow: visible;
+}
+#latest-eq-panel .lep-mag-depth-row .lep-mag-small {
+display: flex; align-items: center; gap: 5px; margin: 0;
+font-size: 17px; font-weight: 700; color: #e0e6f0;
+}
+#latest-eq-panel .lep-mag-depth-row .lep-depth-small {
+display: inline-flex; align-items: baseline; gap: 2px;
+margin: 0 0 0 auto;
+font-size: 20px; font-weight: 700; color: #e0e6f0;
+white-space: nowrap;
+}
+#latest-eq-panel .lep-mag-depth-row .lep-depth-value {
+font-size: 20px; line-height: 1;
+}
+#latest-eq-panel .lep-mag-depth-row .lep-depth-label {
+display: inline-block; writing-mode: horizontal-tb; direction: ltr;
+font-size: 11px; font-weight: 400; line-height: 1;
+transform: translateY(-1px);
+}
+#latest-eq-panel .lep-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: #7a9aba; }
+#latest-eq-panel .lep-time-inline {
+font-size: 14px; font-weight: 700; color: #b0ccee;
+display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+#latest-eq-panel .lep-time-inline i { font-size: 13px; color: #7a9aba; }
+#latest-eq-panel .lep-time-inline .lep-time-val {
+font-family: Calibri, 'Segoe UI', 'PingFang SC', sans-serif;
+display: flex; align-items: center; gap: 6px;
+}
+#latest-eq-panel .lep-time-inline .lep-time-suffix { margin-left: 2px; font-size: 11px; font-weight: 400; }
+#latest-eq-panel .lep-elapsed-inline {
+font-size: 12px; color: #ff6b35;
+display: flex; align-items: center; gap: 5px;
+}
+#latest-eq-panel .lep-elapsed-inline i { font-size: 11px; }
+#latest-eq-panel .lep-meta span { display: flex; align-items: center; gap: 5px; }
+#latest-eq-panel .lep-meta i { font-size: 12px; color: #5a7a9a; }
+#latest-eq-panel .lep-meta .lep-time-val { font-family: 'Courier New', monospace; color: #8aa4c8; }
+#latest-eq-panel .lep-empty { text-align: center; color: #5a7a9a; font-size: 14px; padding: 20px 10px; }
+#latest-eq-panel .lep-empty i { font-size: 28px; margin-bottom: 8px; display: block; color: #3a5a7a; }
+#latest-eq-panel.panel-highlight { border-color: #2a3f5a; box-shadow: 0 6px 30px rgba(0,0,0,0.7); }
+/* 地震预警模式下左上角面板 */
+#latest-eq-panel.eew-active {
+border-color: #2a3f5a;
+box-shadow: 0 6px 30px rgba(0,0,0,0.7);
+}
+#latest-eq-panel.eew-active .lep-header {
+  background: linear-gradient(135deg, rgba(255,34,68,0.2), rgba(255,107,53,0.1));
+  border-bottom-color: rgba(255,34,68,0.3);
+}
+#latest-eq-panel.eew-active .lep-header span:first-of-type {
+color: #ffb347;
+}
+@keyframes eewPanelPulse {
+0% { box-shadow: 0 6px 30px rgba(255,34,68,0.4); }
+50% { box-shadow: 0 6px 40px rgba(255,34,68,0.7); }
+100% { box-shadow: 0 6px 30px rgba(255,34,68,0.4); }
+}
+#latest-eq-panel.eew-pulsing {
+animation: none;
+}
+/* ====== 【修改1】地震历史浮窗 - 悬浮于地图上，半透明背景 ====== */
+#eq-history-float {
+position: absolute; top: 15px; right: 15px; z-index: 1000;
+width: 400px; max-height: calc(100% - 30px);
+background: transparent;
+border: none;
+border-radius: 12px;
+box-shadow: none;
+backdrop-filter: none;
+display: flex; flex-direction: column;
+overflow: hidden;
+transition: all 0.3s ease;
+}
+#eq-history-float .ehf-header {
+display: none;
+}
+#eq-history-float .ehf-header i { font-size: 14px; display: none; }
+#eq-history-float .ehf-header .ehf-count {
+margin-left: auto; font-size: 11px;
+background: rgba(255,107,53,0.2);
+padding: 2px 8px; border-radius: 8px;
+color: #ff6b35; font-weight: 400;
+display: none;
+}
+#eq-history-float .ehf-body {
+flex: 1; overflow-y: auto; padding: 10px 12px;
+}
+#eq-history-float .ehf-body {
+    scrollbar-width: none;        /* Firefox */
+    -ms-overflow-style: none;     /* IE/Edge */
+}
+#eq-history-float .ehf-body::-webkit-scrollbar {
+    display: none;                /* Chrome/Safari/Edge */
+}
+/* ====== 右侧面板（仅用于非地震页面） ====== */
+#side-panel {
+width: 440px; min-width: 440px; background: #0f1a2b; border-left: 1px solid #1a2a40;
+display: none; flex-direction: column; overflow: hidden; transition: width 0.3s ease;
+}
+#side-panel.panel-visible {
+display: flex;
+}
+.panel-content { flex: 1; overflow-y: auto; padding: 14px 18px; }
+.panel-page { display: none; animation: fadeIn 0.3s ease; }
+.panel-page.active { display: block; }
+.info-card {
+background: #141f30; border-radius: 10px; padding: 16px 18px; margin-bottom: 14px;
+border-left: 4px solid #2a3f5a; transition: all 0.25s; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+position: relative;
+}
+.info-card:hover { background: #1a2a40; border-left-color: #ff6b35; box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+.info-card .title {
+font-size: 16px; font-weight: 600; color: #b0ccee; margin-bottom: 8px;
+display: flex; justify-content: space-between; align-items: center;
+}
+.info-card .title .badge {
+font-size: 12px; background: #2a3f5a; padding: 3px 12px; border-radius: 12px; color: #8aa4c8; font-weight: 400;
+}
+.info-card .detail { font-size: 14px; color: #8aa4c8; line-height: 1.8; }
+.info-card .detail strong { color: #e0e6f0; }
+
+/* ========== 地震历史卡片（半透明） ========== */
+.eq-card {
+background: rgba(255, 255, 255, 0.05); border-radius: 10px; margin-bottom: 8px;
+border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.25s ease;
+box-shadow: 0 2px 12px rgba(0,0,0,0.25); position: relative;
+overflow: hidden; display: flex; flex-direction: row; align-items: stretch;
+backdrop-filter: blur(8px);
+}
+.eq-card:hover { background: rgba(255, 255, 255, 0.10); box-shadow: 0 4px 20px rgba(0,0,0,0.35); }
+.eq-card .eq-int-section {
+display: flex; flex-direction: column; align-items: center; justify-content: center;
+min-width: 68px; padding: 12px 8px;
+border-right: 1px solid rgba(255,255,255,0.05); flex-shrink: 0;
+border-radius: 10px 0 0 10px;
+border: 2px solid transparent;
+background: transparent;
+}
+.eq-card .eq-int-section .eq-int-value {
+font-size: 22px; font-weight: 700; line-height: 1.1;
+color: #ffffff !important;
+}
+.eq-card .eq-int-section .eq-int-label {
+font-size: 11px; color: rgba(255,255,255,0.8); margin-top: 3px; letter-spacing: 0.5px;
+}
+.eq-card .eq-info-section {
+flex: 1; padding: 10px 12px; display: flex; flex-direction: column;
+justify-content: center; min-width: 0;
+border-radius: 0 10px 10px 0;
+background: transparent;
+}
+.eq-card .eq-info-section .eq-location {
+font-size: 14px; font-weight: 600; color: #e0e6f0; margin-bottom: 5px;
+line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.eq-card .eq-info-section .eq-meta-row {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: #ffffff; margin-bottom: 3px; line-height: 1.5;
+}
+.eq-card .eq-info-section .eq-meta-row i {
+    font-size: 11px; color: #ffffff; width: 14px; text-align: center; flex-shrink: 0;
+}
+.eq-card .eq-info-section .eq-meta-row .eq-time-val {
+font-family: Calibri, 'Segoe UI', 'PingFang SC', sans-serif; font-size: 12px; color: #ffffff; letter-spacing: 0.3px;
+}
+.eq-card .eq-info-section .eq-mag-inline {
+    font-size: 12px; color: #ffffff;
+}
+.eq-card .eq-info-section .eq-depth-inline {
+    font-size: 12px; color: #ffffff;
+}
+.eq-card .eq-info-section .eq-depth-inline i {
+margin-right: 4px; font-size: 11px;
+}
+/* 悬浮按钮 */
+.eq-card .intensity-btn-float {
+position: absolute; top: 50%; right: 8px;
+transform: translateY(-50%) translateX(10px);
+background: rgba(15, 26, 43, 0.92); border: 1.5px solid #ffffff;
+color: #ffffff; padding: 6px 12px; border-radius: 6px;
+cursor: pointer; font-size: 12px; font-weight: 600;
+white-space: nowrap; z-index: 10; text-align: center;
+opacity: 0; pointer-events: none;
+transition: opacity 0.25s ease, transform 0.25s ease, background 0.2s ease;
+box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+}
+.eq-card:hover .intensity-btn-float {
+opacity: 1; pointer-events: auto; transform: translateY(-50%) translateX(0);
+}
+.intensity-btn-float:hover { background: rgba(255, 255, 255, 0.15); }
+.intensity-btn-float.hide-mode {
+opacity: 1; pointer-events: auto; transform: translateY(-50%) translateX(0);
+background: rgba(100, 100, 100, 0.6); border: 1.5px solid #ffffff; color: #ffffff;
+}
+.intensity-btn-float.hide-mode:hover { background: rgba(120, 120, 120, 0.75); }
+.intensity-btn-float.loading {
+opacity: 1; pointer-events: none; transform: translateY(-50%) translateX(0);
+background: rgba(80, 80, 80, 0.5); cursor: wait;
+}
+/* API统计的样式 */
+.api-stats-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.api-stat-mini { background: #141f30; border-radius: 8px; padding: 12px 14px; text-align: center; border: 1px solid #2a3f5a; }
+.api-stat-mini .value { font-size: 24px; font-weight: 700; color: #ffb347; }
+.api-stat-mini .label { font-size: 13px; color: #6a8aaa; margin-top: 4px; }
+.api-stat-row {
+background: #141f30; border-radius: 8px; padding: 12px 16px; margin-bottom: 10px;
+border-left: 3px solid #2a3f5a; transition: all 0.2s;
+}
+.api-stat-row:hover { background: #1a2a40; }
+.api-stat-row.success { border-left-color: #00ff88; }
+.api-stat-row.error { border-left-color: #ff4444; }
+.api-stat-row .api-name { font-size: 14px; font-weight: 600; color: #b0ccee; margin-bottom: 6px; word-break: break-all; }
+.api-stat-row .api-meta { display: flex; gap: 8px; font-size: 12px; color: #6a8aaa; flex-wrap: wrap; }
+.api-stat-row .api-meta span { background: #0f1a2b; padding: 2px 8px; border-radius: 4px; border: 1px solid #1a2a40; }
+/* 关于模块样式 */
+.about-section { margin-bottom: 20px; }
+.about-section h3 {
+font-size: 16px; font-weight: 600; color: #ffb347; margin-bottom: 12px;
+display: flex; align-items: center; gap: 8px; padding-bottom: 8px;
+border-bottom: 1px solid #1a2a40;
+}
+.about-section h3 i { font-size: 15px; color: #ff6b35; }
+.about-desc { font-size: 14px; color: #8aa4c8; line-height: 1.8; margin-bottom: 16px; }
+.about-item {
+background: #141f30; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px;
+border-left: 3px solid #2a3f5a; transition: all 0.2s;
+display: flex; align-items: center; gap: 12px;
+}
+.about-item:hover { background: #1a2a40; border-left-color: #ff6b35; }
+.about-item .about-icon {
+width: 36px; height: 36px; border-radius: 8px;
+display: flex; align-items: center; justify-content: center;
+font-size: 16px; flex-shrink: 0;
+}
+.about-item .about-text { flex: 1; min-width: 0; }
+.about-item .about-text .about-name { font-size: 14px; font-weight: 600; color: #b0ccee; margin-bottom: 2px; }
+.about-item .about-text .about-role { font-size: 12px; color: #6a8aaa; }
+.about-item .about-text a { color: #5a9ad8; text-decoration: none; font-size: 12px; }
+.about-item .about-text a:hover { text-decoration: underline; }
+/* ====== 烈度图例 ====== */
+#intensity-legend {
+position: absolute; bottom: 30px; left: 15px; z-index: 1000;
+background: transparent;
+border: none;
+border-radius: 10px;
+padding: 10px 14px;
+color: #e0e6f0;
+display: none;
+box-shadow: none;
+max-width: 160px;
+}
+#intensity-legend .legend-title { display: none; }
+.alert-flash { animation: alertPulse 0.8s ease-in-out infinite alternate; }
+@keyframes alertPulse {
+0% { border-left-color: #ff6b35; box-shadow: 0 0 5px rgba(255,107,53,0.2); }
+100% { border-left-color: #ff2244; box-shadow: 0 0 20px rgba(255,34,68,0.4); }
+}
+/* 家的位置设置弹窗 */
+#home-setting-overlay {
+position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+background: rgba(0,0,0,0.6); z-index: 9999;
+display: none; align-items: center; justify-content: center;
+}
+#home-setting-overlay.show { display: flex; }
+#home-setting-dialog {
+background: #141f30; border: 1px solid #2a3f5a; border-radius: 12px;
+padding: 24px 28px; min-width: 340px;
+box-shadow: 0 8px 40px rgba(0,0,0,0.8);
+}
+#home-setting-dialog h3 {
+font-size: 16px; color: #ffb347; margin-bottom: 16px;
+display: flex; align-items: center; gap: 8px;
+}
+#home-setting-dialog label {
+font-size: 13px; color: #8aa4c8; display: block; margin-bottom: 4px;
+}
+#home-setting-dialog input {
+width: 100%; padding: 8px 12px; border-radius: 6px;
+border: 1px solid #2a3f5a; background: #0a0e17; color: #e0e6f0;
+font-size: 14px; margin-bottom: 12px; outline: none;
+}
+#home-setting-dialog input:focus { border-color: #ff6b35; }
+#home-setting-dialog .dialog-btns {
+display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px;
+}
+#home-setting-dialog .dialog-btns button {
+padding: 8px 20px; border-radius: 6px; border: none;
+cursor: pointer; font-size: 13px; font-weight: 600;
+}
+#home-setting-dialog .btn-confirm {
+background: #ff6b35; color: #fff;
+}
+#home-setting-dialog .btn-confirm:hover { background: #e55a28; }
+#home-setting-dialog .btn-cancel {
+background: #2a3f5a; color: #b0ccee;
+}
+#home-setting-dialog .btn-cancel:hover { background: #3a4f6a; }
+#home-setting-dialog .btn-clear {
+background: #4a148c; color: #e0e6f0;
+}
+#home-setting-dialog .btn-clear:hover { background: #6a1bac; }
+/* 导航栏中的数据源设置按钮 */
+.nav-setting-btn {
+padding: 6px 14px;
+font-size: 13px;
+color: #ffb347;
+cursor: pointer;
+border: 1px solid rgba(255,179,71,0.3);
+border-radius: 6px;
+background: rgba(255,179,71,0.08);
+display: flex;
+align-items: center;
+gap: 5px;
+white-space: nowrap;
+transition: all 0.2s;
+flex-shrink: 0;
+}
+.nav-setting-btn:hover {
+background: rgba(255,179,71,0.18);
+border-color: rgba(255,179,71,0.5);
+}
+/* 数据源设置弹窗 */
+#datasource-setting-overlay {
+position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+background: rgba(0,0,0,0.6); z-index: 9999;
+display: none; align-items: center; justify-content: center;
+}
+#datasource-setting-overlay.show { display: flex; }
+#datasource-setting-dialog {
+background: #141f30; border: 1px solid #2a3f5a; border-radius: 12px;
+padding: 24px 28px; min-width: 400px;
+box-shadow: 0 8px 40px rgba(0,0,0,0.8);
+}
+#datasource-setting-dialog h3 {
+font-size: 16px; color: #ffb347; margin-bottom: 16px;
+display: flex; align-items: center; gap: 8px;
+}
+.ds-option {
+display: flex; align-items: center; gap: 10px;
+padding: 12px 16px; margin-bottom: 8px;
+background: #0f1a2b; border: 1px solid #2a3f5a; border-radius: 8px;
+cursor: pointer; transition: all 0.2s;
+}
+.ds-option:hover { background: #1a2a40; border-color: #ff6b35; }
+.ds-option.active { border-color: #ff6b35; background: rgba(255,107,53,0.1); }
+.ds-option input[type="radio"] { accent-color: #ff6b35; }
+.ds-option .ds-label { font-size: 14px; color: #b0ccee; font-weight: 600; }
+.ds-option .ds-desc { font-size: 12px; color: #6a8aaa; margin-top: 2px; }
+#datasource-setting-dialog .dialog-btns {
+display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;
+}
+#datasource-setting-dialog .dialog-btns button {
+padding: 8px 20px; border-radius: 6px; border: none;
+cursor: pointer; font-size: 13px; font-weight: 600;
+}
+/* 导航栏中的设置家按钮 */
+.nav-home-btn {
+    padding: 6px 14px;
+font-size: 13px;
+color: #00ff88;
+cursor: pointer;
+border: 1px solid rgba(0,255,136,0.3);
+border-radius: 6px;
+background: rgba(0,255,136,0.08);
+display: flex;
+align-items: center;
+gap: 5px;
+white-space: nowrap;
+transition: all 0.2s;
+flex-shrink: 0;
+}
+.nav-home-btn:hover {
+background: rgba(0,255,136,0.18);
+border-color: rgba(0,255,136,0.5);
+}
+/* WebSocket状态指示器 - 已移至顶部状态栏 */
+#ws-status-inline {
+font-size: 13px; color: #8aa4c8;
+}
+#ws-status-inline .ws-dot {
+width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+}
+#ws-status-inline .ws-dot.ws-ok { background: #00ff88; box-shadow: 0 0 6px #00ff88; }
+#ws-status-inline .ws-dot.ws-fail { background: #ff4444; box-shadow: 0 0 6px #ff4444; }
+#ws-status-inline .ws-dot.ws-fallback { background: #ff9800; box-shadow: 0 0 6px #ff9800; }
+@media (max-width: 1024px) {
+#eq-history-float { width: 340px; }
+#side-panel { width: 360px; min-width: 360px; }
+}
+@media (max-width: 768px) {
+#eq-history-float { width: 280px; right: 8px; top: 8px; }
+#side-panel { width: 100%; min-width: unset; max-height: 45vh; border-left: none; border-top: 1px solid #1a2a40; }
+#main { flex-direction: column-reverse; }
+#header .logo h1 { font-size: 16px; }
+#latest-eq-panel { min-width: 220px; max-width: 280px; }
+}
+/* ====== 全局加载页面 ====== */
+#global-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 14, 23, 0.95);
+    z-index: 1005;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s ease;
+    backdrop-filter: blur(8px);
+}
+#global-loading-overlay.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+#global-loading-overlay .gl-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(255, 107, 53, 0.2);
+    border-top-color: #ff6b35;
+    border-radius: 50%;
+    animation: glSpin 1s linear infinite;
+    margin-bottom: 20px;
+}
+#global-loading-overlay .gl-text {
+    font-size: 20px;
+    font-weight: 600;
+    color: #b0ccee;
+    letter-spacing: 2px;
+}
+#global-loading-overlay .gl-sub-text {
+    font-size: 13px;
+    color: #6a8aaa;
+    margin-top: 8px;
+}
+@keyframes glSpin {
+    to { transform: rotate(360deg); }
+}
+/* 给 map-container 创建独立层叠上下文，确保加载层不会覆盖顶部导航 */
+#map-container {
+    isolation: isolate;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+/* ====== 地震预警模块样式 ====== */
+#eew-history-float {
+  position: absolute; top: 15px; right: 15px; z-index: 1000;
+  width: 400px; max-height: calc(100% - 30px);
+  background: transparent; border: none; border-radius: 12px;
+  box-shadow: none; backdrop-filter: none;
+  display: none; flex-direction: column; overflow: hidden; transition: all 0.3s ease;
+}
+#eew-history-float .ehf-header {
+  background: transparent; padding: 10px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: #ff2244; font-weight: 600;
+  letter-spacing: 1px; flex-shrink: 0;
+}
+#eew-history-float .ehf-body {
+  flex: 1; overflow-y: auto; padding: 10px 12px;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+#eew-history-float .ehf-body::-webkit-scrollbar { display: none; }
+
+/* 地震预警卡片 */
+.eew-card {
+background: rgba(255, 255, 255, 0.05); border-radius: 10px; margin-bottom: 8px;
+border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.25s ease;
+box-shadow: 0 2px 12px rgba(0,0,0,0.25); position: relative;
+overflow: hidden; display: flex; flex-direction: row; align-items: stretch;
+backdrop-filter: blur(8px);
+}
+.eew-card:hover { background: rgba(255, 255, 255, 0.10); box-shadow: 0 4px 20px rgba(0,0,0,0.35); }
+.eew-card .eew-int-section {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-width: 68px; padding: 12px 8px; flex-shrink: 0;
+  border-radius: 10px 0 0 10px; border: 2px solid transparent; background: transparent;
+}
+.eew-card .eew-int-section .eew-int-value { font-size: 22px; font-weight: 700; line-height: 1.1; color: #ffffff !important; }
+.eew-card .eew-int-section .eew-int-label { font-size: 11px; color: rgba(255,255,255,0.8); margin-top: 3px; }
+.eew-card .eew-info-section {
+  flex: 1; padding: 10px 12px; display: flex; flex-direction: column;
+  justify-content: center; min-width: 0; border-radius: 0 10px 10px 0; background: transparent;
+}
+.eew-card .eew-info-section .eew-location {
+  font-size: 14px; font-weight: 600; color: #e0e6f0; margin-bottom: 5px;
+  line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.eew-card .eew-info-section .eew-meta-row {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: #ffffff; margin-bottom: 3px; line-height: 1.5;
+}
+.eew-card .eew-info-section .eew-meta-row i { font-size: 11px; color: #ffffff; width: 14px; text-align: center; flex-shrink: 0; }
+.eew-card .eew-info-section .eew-meta-row .eew-time-val { font-family: Calibri, 'Segoe UI', 'PingFang SC', sans-serif; font-size: 12px; color: #ffffff; }
+.eew-card .eew-btn-group {
+  position: absolute; top: 50%; right: 8px; transform: translateY(-50%) translateX(10px);
+  display: flex; gap: 4px; opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease; z-index: 10;
+}
+.eew-card:hover .eew-btn-group { opacity: 1; pointer-events: auto; transform: translateY(-50%) translateX(0); }
+.eew-btn-float {
+  background: rgba(15, 26, 43, 0.92); border: 1.5px solid #ffffff;
+  color: #ffffff; padding: 6px 10px; border-radius: 6px;
+  cursor: pointer; font-size: 11px; font-weight: 600; white-space: nowrap; text-align: center;
+  transition: background 0.2s ease; box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+}
+.eew-btn-float:hover { background: rgba(255, 255, 255, 0.15); }
+.eew-btn-float.review-active { background: rgba(255, 107, 53, 0.4); border-color: #ff6b35; }
+
+/* 地震预警闪烁震中标记 */
+@keyframes eewFlash {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.2; }
+}
+.eew-flash-icon { animation: eewFlash 1s step-end infinite; }
+
+/* 地震预警倒计时窗口 */
+#eew-countdown-panel {
+position: absolute; bottom: 30px; right: 430px; z-index: 1002;
+background: rgba(10, 14, 23, 0.95); border: 1px solid #2a3f5a;
+border-radius: 12px; padding: 16px 20px; min-width: 220px;
+box-shadow: 0 6px 30px rgba(0,0,0,0.7); backdrop-filter: blur(10px);
+display: none;
+}
+#eew-countdown-panel .cd-title {
+  font-size: 13px; color: #ff6b35; font-weight: 600; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+#eew-countdown-panel .cd-time {
+  font-size: 36px; font-weight: 800; color: #ff2244; text-align: center;
+  font-family: 'Courier New', monospace; line-height: 1.2;
+}
+#eew-countdown-panel .cd-label {
+  font-size: 12px; color: #8aa4c8; text-align: center; margin-bottom: 8px;
+}
+#eew-countdown-panel .cd-intensity {
+  font-size: 16px; font-weight: 700; text-align: center; padding: 6px 12px;
+  border-radius: 8px; margin-top: 6px;
+}
+/* 全屏按钮 */
+.nav-fullscreen-btn {
+    padding: 6px 14px;
+    font-size: 13px;
+    color: #e0e6f0;
+    cursor: pointer;
+    border: 1px solid rgba(224,230,240,0.3);
+    border-radius: 6px;
+    background: rgba(224,230,240,0.08);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+.nav-fullscreen-btn:hover {
+    background: rgba(224,230,240,0.18);
+    border-color: rgba(224,230,240,0.5);
+}
+
+/* 页面缩放按钮 */
+.nav-zoom-btn {
+    padding: 6px 14px;
+    font-size: 13px;
+    color: #87ceeb;
+    cursor: pointer;
+    border: 1px solid rgba(135,206,235,0.3);
+    border-radius: 6px;
+    background: rgba(135,206,235,0.08);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+.nav-zoom-btn:hover {
+    background: rgba(135,206,235,0.18);
+    border-color: rgba(135,206,235,0.5);
+}
+
+/* 缩放弹窗 */
+#zoom-setting-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); z-index: 9999;
+    display: none; align-items: center; justify-content: center;
+}
+#zoom-setting-overlay.show { display: flex; }
+#zoom-setting-dialog {
+    background: #141f30; border: 1px solid #2a3f5a; border-radius: 12px;
+    padding: 24px 28px; min-width: 380px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.8);
+}
+#zoom-setting-dialog h3 {
+    font-size: 16px; color: #87ceeb; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+}
+.zoom-slider-container {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 12px;
+}
+.zoom-slider-container .zoom-label {
+    font-size: 13px; color: #8aa4c8; white-space: nowrap; min-width: 36px; text-align: center;
+}
+.zoom-slider-container input[type="range"] {
+    flex: 1; height: 6px; -webkit-appearance: none; appearance: none;
+    background: #2a3f5a; border-radius: 3px; outline: none; cursor: pointer;
+}
+.zoom-slider-container input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #87ceeb; border: 2px solid #fff; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(135,206,235,0.5);
+}
+.zoom-slider-container input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #87ceeb; border: 2px solid #fff; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(135,206,235,0.5);
+}
+.zoom-value-display {
+    font-size: 22px; font-weight: 700; color: #87ceeb;
+    text-align: center; margin-bottom: 16px;
+    font-family: 'Courier New', monospace;
+}
+.zoom-preset-btns {
+    display: flex; gap: 8px; justify-content: center; margin-bottom: 16px;
+}
+.zoom-preset-btns button {
+    padding: 5px 14px; border-radius: 6px; border: 1px solid #2a3f5a;
+    background: #0f1a2b; color: #b0ccee; cursor: pointer; font-size: 12px;
+    transition: all 0.2s;
+}
+.zoom-preset-btns button:hover { background: #1a2a40; border-color: #87ceeb; color: #87ceeb; }
+#zoom-setting-dialog .dialog-btns {
+    display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px;
+}
+#zoom-setting-dialog .dialog-btns button {
+    padding: 8px 20px; border-radius: 6px; border: none;
+    cursor: pointer; font-size: 13px; font-weight: 600;
+}
+/* ====== 统一设置对话框（屏幕居中弹出：左侧导航 + 右侧详情） ====== */
+#settings-center-overlay {
+position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+background: rgba(0,0,0,0.6); z-index: 9998;
+display: none; align-items: center; justify-content: center;
+}
+#settings-center-overlay.show { display: flex; }
+#settings-center-dialog {
+position: relative;
+background: #141f30; border: 1px solid #2a3f5a; border-radius: 14px;
+box-shadow: 0 12px 50px rgba(0,0,0,0.85);
+width: 780px; max-width: 92vw; height: 580px; max-height: 86vh;
+display: flex; overflow: hidden;
+animation: disclaimerFadeIn 0.3s ease;
+}
+.sc-close {
+position: absolute; top: 10px; right: 12px; z-index: 5;
+width: 30px; height: 30px; border-radius: 6px;
+display: flex; align-items: center; justify-content: center;
+color: #8aa4c8; cursor: pointer; font-size: 16px; transition: all 0.2s;
+}
+.sc-close:hover { background: rgba(255,107,53,0.15); color: #ff6b35; }
+.sc-sidebar {
+width: 150px; flex-shrink: 0; padding: 20px 10px;
+background: #0f1a2b; border-right: 1px solid #1a2a40;
+display: flex; flex-direction: column; gap: 8px;
+}
+.sc-nav-item {
+display: flex; align-items: center; gap: 9px;
+padding: 10px 14px; border-radius: 8px;
+font-size: 13px; font-weight: 600; cursor: pointer;
+border: 1px solid transparent; transition: all 0.18s; white-space: nowrap;
+}
+.sc-nav-item i { width: 16px; text-align: center; }
+.sc-nav-item.scn-page { color: #87ceeb; background: rgba(135,206,235,0.06); }
+.sc-nav-item.scn-page:hover, .sc-nav-item.scn-page.active { background: rgba(135,206,235,0.16); border-color: rgba(135,206,235,0.45); }
+.sc-nav-item.scn-home { color: #00ff88; background: rgba(0,255,136,0.05); }
+.sc-nav-item.scn-home:hover, .sc-nav-item.scn-home.active { background: rgba(0,255,136,0.13); border-color: rgba(0,255,136,0.4); }
+.sc-nav-item.scn-audio { color: #a78bfa; background: rgba(167,139,250,0.06); }
+.sc-nav-item.scn-audio:hover, .sc-nav-item.scn-audio.active { background: rgba(167,139,250,0.16); border-color: rgba(167,139,250,0.45); }
+.sc-nav-item.scn-ds { color: #ffb347; background: rgba(255,179,71,0.06); }
+.sc-nav-item.scn-ds:hover, .sc-nav-item.scn-ds.active { background: rgba(255,179,71,0.16); border-color: rgba(255,179,71,0.45); }
+.sc-nav-item.scn-about { color: #ff6b35; background: rgba(255,107,53,0.06); }
+.sc-nav-item.scn-about:hover, .sc-nav-item.scn-about.active { background: rgba(255,107,53,0.16); border-color: rgba(255,107,53,0.45); }
+.sc-content {
+flex: 1; padding: 24px 28px; overflow-y: auto; min-width: 0;
+}
+.sc-panel { display: none; }
+.sc-panel.active { display: block; animation: fadeIn 0.25s ease; }
+.sc-panel h3 {
+font-size: 16px; color: #b0ccee; margin-bottom: 14px;
+display: flex; align-items: center; gap: 8px;
+}
+.sc-divider { height: 1px; background: #2a3f5a; margin: 22px 0; }
+.sc-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+.sc-btn {
+padding: 8px 20px; border-radius: 6px; border: none;
+cursor: pointer; font-size: 13px; font-weight: 600; transition: filter 0.15s;
+}
+.sc-btn:hover { filter: brightness(1.15); }
+.sc-btn-clear { background: #4a148c; color: #e0e6f0; }
+/* 所在地输入控件 */
+#sc-home label { font-size: 13px; color: #8aa4c8; display: block; margin-bottom: 4px; }
+#sc-home input {
+width: 100%; padding: 8px 12px; border-radius: 6px;
+border: 1px solid #2a3f5a; background: #0a0e17; color: #e0e6f0;
+font-size: 14px; margin-bottom: 12px; outline: none;
+}
+#sc-home input:focus { border-color: #ff6b35; }
+/* 关于面板（原右侧关于页内容迁入） */
+#sc-about .about-section:last-child { margin-bottom: 0; }
+/* 浮窗设置弹窗 */
+#float-setting-overlay {
+position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+background: rgba(0,0,0,0.6); z-index: 9999;
+display: none; align-items: center; justify-content: center;
+}
+#float-setting-overlay.show { display: flex; }
+#float-setting-dialog {
+background: #141f30; border: 1px solid #2a3f5a; border-radius: 12px;
+padding: 24px 28px; min-width: 440px;
+box-shadow: 0 8px 40px rgba(0,0,0,0.8);
+}
+#float-setting-dialog h3 {
+font-size: 16px; color: #ff6b35; margin-bottom: 18px;
+display: flex; align-items: center; gap: 8px;
+}
+.float-set-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.float-set-label { font-size: 13px; color: #b0ccee; font-weight: 600; min-width: 48px; flex-shrink: 0; }
+.float-slider-container { display: flex; align-items: center; gap: 10px; flex: 1; }
+.float-set-end { font-size: 12px; color: #6a8aaa; min-width: 36px; text-align: center; flex-shrink: 0; }
+.float-slider-container input[type="range"] {
+flex: 1; height: 6px; -webkit-appearance: none; appearance: none;
+background: #2a3f5a; border-radius: 3px; outline: none; cursor: pointer;
+}
+.float-slider-container input[type="range"]::-webkit-slider-thumb {
+-webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%;
+background: #ff6b35; border: 2px solid #fff; cursor: pointer;
+box-shadow: 0 2px 8px rgba(255,107,53,0.5);
+}
+.float-slider-container input[type="range"]::-moz-range-thumb {
+width: 16px; height: 16px; border-radius: 50%;
+background: #ff6b35; border: 2px solid #fff; cursor: pointer;
+}
+.float-set-value {
+font-size: 14px; font-weight: 700; color: #ff6b35; min-width: 50px; text-align: right;
+font-family: 'Courier New', monospace; flex-shrink: 0;
+}
+#float-setting-dialog .dialog-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+#float-setting-dialog .dialog-btns button {
+padding: 8px 20px; border-radius: 6px; border: none;
+cursor: pointer; font-size: 13px; font-weight: 600;
+}
+/* 浮窗透明度与毛玻璃模糊度控制：
+   透明度直接作用于卡片本身（与 backdrop-filter 同层）。
+   若把 opacity 加在外层浮窗容器上，容器会形成独立合成组，
+   卡片的 backdrop-filter 将采样不到地图内容，导致透明度≠100% 时模糊失效。 */
+.eq-card, .eew-card {
+opacity: var(--panel-opacity, 1);
+backdrop-filter: blur(var(--panel-blur, 8px));
+-webkit-backdrop-filter: blur(var(--panel-blur, 8px));
+}
+#eew-history-float .ehf-header { opacity: var(--panel-opacity, 1); }
+/* 音频设置按钮 */
+.nav-audio-btn {
+  padding: 6px 14px; font-size: 13px; color: #a78bfa;
+  cursor: pointer; border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 6px; background: rgba(167,139,250,0.08);
+  display: flex; align-items: center; gap: 5px;
+  white-space: nowrap; transition: all 0.2s; flex-shrink: 0;
+}
+.nav-audio-btn:hover { background: rgba(167,139,250,0.18); border-color: rgba(167,139,250,0.5); }
+
+/* 音频设置弹窗 */
+#audio-setting-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6); z-index: 9999;
+  display: none; align-items: center; justify-content: center;
+}
+#audio-setting-overlay.show { display: flex; }
+#audio-setting-dialog {
+  background: #141f30; border: 1px solid #2a3f5a; border-radius: 12px;
+  padding: 24px 28px; min-width: 420px; max-height: 80vh; overflow-y: auto;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.8);
+}
+#audio-setting-dialog h3 {
+  font-size: 16px; color: #a78bfa; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.audio-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; margin-bottom: 8px;
+  background: #0f1a2b; border: 1px solid #2a3f5a; border-radius: 8px;
+  transition: all 0.2s;
+}
+.audio-item:hover { background: #1a2a40; border-color: #a78bfa; }
+.audio-item .audio-name { font-size: 13px; color: #b0ccee; font-weight: 600; flex: 1; }
+.audio-item .audio-file { font-size: 11px; color: #6a8aaa; flex: 1; }
+.audio-item .audio-test-btn {
+  padding: 4px 12px; border-radius: 4px; border: 1px solid #3a5a7a;
+  background: #1a2a40; color: #b0ccee; cursor: pointer; font-size: 12px;
+  transition: all 0.2s;
+}
+.audio-item .audio-test-btn:hover { background: #2a3f5a; border-color: #a78bfa; }
+#audio-setting-dialog .dialog-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+#audio-setting-dialog .dialog-btns button {
+  padding: 8px 20px; border-radius: 6px; border: none;
+  cursor: pointer; font-size: 13px; font-weight: 600;
+}
+
+/* 数据源设置弹窗内分区标题 */
+.ds-section-title {
+  font-size: 14px; font-weight: 600; color: #ffb347; margin: 16px 0 8px 0;
+  padding-bottom: 6px; border-bottom: 1px solid #2a3f5a;
+  display: flex; align-items: center; gap: 6px;
+}
+.ds-section-title:first-child { margin-top: 0; }
+.ds-section-title i { font-size: 13px; color: #ff6b35; }
+.ds-checkbox-option {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px; margin-bottom: 6px;
+  background: #0f1a2b; border: 1px solid #2a3f5a; border-radius: 8px;
+  cursor: pointer; transition: all 0.2s;
+}
+.ds-checkbox-option:hover { background: #1a2a40; border-color: #ff6b35; }
+.ds-checkbox-option.active { border-color: #ff6b35; background: rgba(255,107,53,0.1); }
+.ds-checkbox-option.disabled { opacity: 0.4; cursor: not-allowed; }
+.ds-checkbox-option input[type="checkbox"] { accent-color: #ff6b35; }
+.ds-checkbox-option input[type="radio"] { accent-color: #ff6b35; }
+.ds-checkbox-option .ds-label { font-size: 14px; color: #b0ccee; font-weight: 600; }
+.ds-checkbox-option .ds-desc { font-size: 12px; color: #6a8aaa; margin-top: 2px; }
+</style>
+</head>
+<body>
+<!-- ====== 免责声明弹窗 ====== -->
+<div id="disclaimer-overlay" class="hidden">
+    <div id="disclaimer-dialog">
+        <div class="disc-header">
+            <i class="fas fa-triangle-exclamation"></i>
+            <h2>用户许可与免责声明</h2>
+        </div>
+        <div class="disc-body">
+            <div class="disc-intro">请仔细完整阅读以下全部条款。同意所有条款后，方可使用本软件！</div>
+
+            <div class="disc-section">
+                <div class="disc-section-title"><span class="disc-num">1.</span> 软件性质界定</div>
+                <p>本软件仅为地震相关地理信息、监测数据的技术演示、学术研究、可视化演示程序。本软件不属于、不代表、不等同于官方地震预警、海啸预警、应急避险工具。作者不具备地震预警、灾害预警信息发布的法定资质，本程序输出所有内容不得作为地震逃生、防灾避险的决策依据。</p>
+                <div class="disc-law">依据《中华人民共和国防震减灾法》，地震预警、地震预报仅可由国家法定主管部门统一对外发布。</div>
+            </div>
+
+            <div class="disc-section">
+                <div class="disc-section-title"><span class="disc-num">2.</span> 关于第三方数据源说明</div>
+                <p>本软件所有地震、海啸、烈度、坐标、时间等原始数据，全部来源于公开第三方网络数据源，可能存在但不限于以下问题：网络延迟、数据丢包、报文缺失、定位偏移、震级估算错误、误触发、漏触发、预警撤销推送延迟、接口临时关停、接口修改、服务永久停止。</p>
+                <p style="margin-top:6px;">作者不对任何第三方数据源的实时性、准确性、完整性、可用性做任何明示或者暗示担保。软件展示内容仅为原始数据可视化，作者不对原始数据进行真实性校验。</p>
+            </div>
+
+            <div class="disc-section">
+                <div class="disc-section-title"><span class="disc-num">3.</span> 功能与可用性免责</div>
+                <p>本软件不承诺7×24小时稳定运行，可能出现闪退、卡死、弹窗失效、声音警报不触发、地图加载失败、时间计算错误、倒计时计算偏差等程序故障。</p>
+                <p style="margin-top:6px;">故障诱因包含：操作系统兼容性问题、显卡驱动异常、网络波动、防火墙拦截、端口限制、第三方接口故障、系统权限缺失。因软件功能异常、失效带来的一切后果，由使用者自行承担。</p>
+            </div>
+
+            <div class="disc-section">
+                <div class="disc-section-title"><span class="disc-num">4.</span> 风险与损失责任划分</div>
+                <p>使用者确认自愿承担使用本软件带来的全部风险。</p>
+                <p style="margin-top:4px;">在法律允许的最大范围内，软件作者、开发团队不对下述任何损失承担任何赔偿责任：</p>
+                <div class="disc-sub-items">
+                    <div class="disc-sub-item">1. 人身伤害、人员伤亡、恐慌踩踏、交通事故等生命安全相关损失；</div>
+                    <div class="disc-sub-item">2. 财产损毁、物品损失、停工损失、经济损失；</div>
+                    <div class="disc-sub-item">3. 间接损失、衍生损失、预期收益损失、名誉损失；</div>
+                    <div class="disc-sub-item">4. 因误信软件提示做出避险、撤离、外出等行为产生的各类损失。</div>
+                </div>
+                <p style="margin-top:6px;">无论作者是否提前告知该类故障发生的可能性，均不承担赔偿责任。</p>
+            </div>
+
+            <div class="disc-section">
+                <div class="disc-section-title"><span class="disc-num">5.</span> 使用行为约束</div>
+                <div class="disc-sub-items">
+                    <div class="disc-sub-item">1. 严禁仅依靠本软件提示进行地震避险、海啸避险等应急行动；遇到地震险情，必须以国家地震局、应急管理部门、地方应急广播、官方手机预警弹窗作为唯一避险依据。</div>
+                    <div class="disc-sub-item">2. 禁止将本软件、本软件编译后的程序包二次分发、二次打包、二次改造后，面向普通大众作为地震预警工具传播推广。本项目仅用于个人技术学习研究。</div>
+                    <div class="disc-sub-item">3. 使用者不得利用本软件的数据输出编造灾情、传播不实灾害消息，不得利用本软件从事违法活动，违规使用带来的全部法律责任由使用者自行承担。</div>
+                </div>
+            </div>
+
+            <div class="disc-section">
+                <div class="disc-section-title"><span class="disc-num">6.</span> 协议修改与最终解释</div>
+                <p>作者保留随时修改本免责条款、随时停止项目维护、停止数据源对接的权利，无需提前告知使用者。</p>
+                <p style="margin-top:6px;">如本声明中任意一条条款被认定无效，其余全部免责条款依旧完整生效。</p>
+            </div>
+        </div>
+        <div class="disc-footer">
+            <div class="disc-checkbox-row" id="discCheckboxRow">
+                <input type="checkbox" id="discAgreeCheck" />
+                <label for="discAgreeCheck">我已完整阅读，完全理解并同意以上全部免责条款</label>
+            </div>
+            <div class="disc-btns">
+                <button class="btn-enter" id="btnDiscEnter" disabled>进入程序</button>
+                <button class="btn-exit" id="btnDiscExit">退出程序</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ====== 标题栏 ====== -->
+<header id="header">
+<div class="logo" id="logoArea"><i class="fas fa-shield-halved"></i><h1 id="platformTitle">地震预警 · 防震减灾</h1></div>
+<div class="status-bar">
+<span id="ws-status-inline" style="display:flex; align-items:center; gap:6px;">
+<span class="ws-dot ws-ok" id="wsStatusDot"></span>
+<span id="wsStatusText">WS: 连接中</span>
+</span>
+<span class="time-display" id="headerTime">--:--:--</span>
+<span><i class="fas fa-database"></i> <span id="dataCount">0</span> 条</span>
+<span title="API调用统计"><i class="fas fa-network-wired"></i> <span id="apiTotalCalls">0</span></span>
+</div>
+</header>
+<!-- ====== 导航栏 ====== -->
+<div id="top-nav-bar">
+  <div class="nav-item active" data-page="page-earthquake"><i class="fas fa-house-crack"></i> 地震</div>
+  <div class="nav-item" data-page="page-eew" id="navEew" style="display:none;"><i class="fas fa-bell"></i> 地震预警</div>
+  <div class="nav-item" data-page="page-tsunami"><i class="fas fa-water"></i> 海啸</div>
+  <div class="nav-item" data-page="page-typhoon"><i class="fas fa-hurricane"></i> 台风</div>
+  <div class="nav-item" data-page="page-volcano"><i class="fas fa-volcano"></i> 火山</div>
+  <div class="nav-item" data-page="page-fire"><i class="fas fa-fire"></i> 火灾</div>
+  <div class="nav-item" data-page="page-weather"><i class="fas fa-cloud-sun"></i> 气象</div>
+  <div class="nav-item" data-page="page-apistats"><i class="fas fa-chart-bar"></i> API统计</div>
+  <div class="nav-item" id="navSettings"><i class="fas fa-gear"></i> 设置</div>
+<div class="nav-fullscreen-btn" id="btnFullscreen" style="margin-left:auto;"><i class="fas fa-expand"></i> 全屏</div>
+</div>
+<div id="main">
+<div id="map-container">
+    <!-- 全局加载页面 - 位于导航栏下方，最新地震和地震历史上方 -->
+    <div id="global-loading-overlay">
+        <div class="gl-spinner"></div>
+        <div class="gl-text">数据加载中...</div>
+        <div class="gl-sub-text">正在获取最新灾害信息</div>
+    </div>
+<div id="map-loading-overlay">
+<div class="loading-content">
+<i class="fas fa-globe-asia fa-spin" style="font-size:64px;color:#ff6b35;"></i>
+<div style="margin-top:20px; font-size:32px; font-weight:600; color:#b0ccee;">地图数据加载中...</div>
+<div class="progress-bar"><div class="progress-fill" id="geoProgress"></div></div>
+<div style="font-size:20px;color:#8aa4c8;margin-top:12px;" id="geoStatus">正在连接地理服务</div>
+</div>
+</div>
+<!-- 【修改2】删除了intensity-loading-indicator加载弹窗 -->
+<div id="intensity-legend">
+<div id="legend-items"></div>
+</div>
+<!-- 最新地震面板 -->
+<div id="latest-eq-panel">
+<div class="lep-header">
+<i class="fas fa-satellite-dish"></i>
+<span id="lepTitle">中国地震台网</span>
+<span class="lep-report" id="lepReport" style="display:none;">第1报</span>
+</div>
+<div class="lep-body" id="lepBody">
+<div class="lep-empty">
+<i class="fas fa-hourglass-half"></i>
+等待地震数据...
+</div>
+</div>
+</div>
+<!-- 【修改1】地震历史浮窗 - 悬浮于地图上 -->
+<div id="eq-history-float">
+<div class="ehf-header">
+    <i class="fas fa-list"></i>
+    <span class="ehf-count" id="eqHistoryCount">0</span>
+</div>
+<div class="ehf-body" id="eqHistoryList">
+<div style="text-align:center; color:#5a7a9a; font-size:14px; padding:20px 10px;">
+<i class="fas fa-hourglass-half" style="font-size:28px; margin-bottom:8px; display:block; color:#3a5a7a;"></i>
+暂无历史数据
+</div>
+</div>
+</div>
+<!-- 地震预警浮窗 -->
+<div id="eew-history-float">
+  <div class="ehf-body" id="eewList" style="padding-top:10px;">
+    <span id="eewCount" style="display:none;">0</span>
+    <div style="text-align:center; color:#5a7a9a; font-size:14px; padding:20px 10px;">
+      <i class="fas fa-hourglass-half" style="font-size:28px; margin-bottom:8px; display:block; color:#3a5a7a;"></i>
+      等待地震预警数据...
+    </div>
+  </div>
+</div>
+<!-- 地震预警倒计时面板 -->
+<div id="eew-countdown-panel">
+  <div class="cd-title"><i class="fas fa-triangle-exclamation"></i> 地震预警倒计时</div>
+  <div class="cd-label">S波到达您的家</div>
+  <div class="cd-time" id="cdTime">--</div>
+  <div class="cd-label">预计到达烈度</div>
+  <div class="cd-intensity" id="cdIntensity">--</div>
+</div>
+<div id="map"></div>
+</div>
+<!-- 【修改1】右侧面板：删除了实时预警浮窗，仅保留非地震页面 -->
+<div id="side-panel">
+<div class="panel-content" id="panelContent">
+<!-- 地震页面已移至地图浮窗，此处不再包含page-earthquake -->
+<div class="panel-page" id="page-typhoon">
+<div id="typhoonList"><div class="info-card"><div class="title"><span><i class="fas fa-hurricane"></i> 活跃台风</span><span class="badge" id="typhoonCount">0</span></div><div class="detail" id="typhoonDetail">暂无台风数据</div></div></div>
+</div>
+<div class="panel-page" id="page-tsunami">
+<div id="tsunamiList"><div class="info-card"><div class="title"><span><i class="fas fa-water"></i> 海啸预警</span><span class="badge" id="tsunamiStatusBadge">监测中</span></div><div class="detail" id="tsunamiAlert">暂无海啸威胁</div></div></div>
+</div>
+<div class="panel-page" id="page-volcano">
+<div id="volcanoList"><div class="info-card"><div class="title"><span><i class="fas fa-volcano"></i> 火山活动</span><span class="badge">监测中</span></div><div class="detail" id="volcanoAlert">暂无火山活动报告</div></div></div>
+</div>
+<div class="panel-page" id="page-fire">
+<div id="fireList"><div class="info-card"><div class="title"><span><i class="fas fa-fire"></i> 火灾热点</span><span class="badge" id="fireCount">0</span></div><div class="detail" id="fireDetail">暂无火灾热点</div></div></div>
+</div>
+<div class="panel-page" id="page-weather">
+<div id="weatherList"><div class="info-card"><div class="title"><span><i class="fas fa-cloud-sun"></i> 气象灾害</span><span class="badge">监测中</span></div><div class="detail" id="weatherAlert">暂无气象灾害预警</div></div></div>
+</div>
+<div class="panel-page" id="page-apistats">
+<div class="api-stats-summary" id="apiStatsSummary">
+<div class="api-stat-mini"><div class="value" id="statTotalCalls">0</div><div class="label">总调用次数</div></div>
+<div class="api-stat-mini"><div class="value" id="statSuccessRate">0%</div><div class="label">成功率</div></div>
+<div class="api-stat-mini"><div class="value" id="statTotalData">0 KB</div><div class="label">总数据量</div></div>
+<div class="api-stat-mini"><div class="value" id="statAvgLatency">0 ms</div><div class="label">平均延迟</div></div>
+</div>
+<div id="apiStatsList"><div class="info-card"><div class="detail" style="text-align:center;color:#6a8aaa;">等待API调用...</div></div></div>
+</div>
+</div>
+</div>
+</div>
+<!-- ====== 统一设置对话框（屏幕居中，左侧导航 + 右侧详情） ====== -->
+<div id="settings-center-overlay">
+  <div id="settings-center-dialog">
+    <div class="sc-close" id="btnCloseSettings" title="关闭"><i class="fas fa-xmark"></i></div>
+    <div class="sc-sidebar">
+      <div class="sc-nav-item scn-page active" data-scpanel="sc-page"><i class="fas fa-desktop"></i> 页面</div>
+      <div class="sc-nav-item scn-home" data-scpanel="sc-home"><i class="fas fa-house-user"></i> 所在地</div>
+      <div class="sc-nav-item scn-audio" data-scpanel="sc-audio"><i class="fas fa-volume-high"></i> 音频</div>
+      <div class="sc-nav-item scn-ds" data-scpanel="sc-datasource"><i class="fas fa-database"></i> 数据源</div>
+      <div class="sc-nav-item scn-about" data-scpanel="sc-about"><i class="fas fa-circle-info"></i> 关于</div>
+    </div>
+    <div class="sc-content">
+      <!-- 页面：页面缩放 + 浮窗设置 -->
+      <div class="sc-panel active" id="sc-page">
+        <h3><i class="fas fa-magnifying-glass" style="color:#87ceeb;"></i> 页面缩放</h3>
+        <div class="zoom-value-display" id="zoomValueDisplay">100%</div>
+        <div class="zoom-slider-container">
+          <span class="zoom-label">25%</span>
+          <input type="range" id="zoomSlider" min="25" max="500" step="5" value="100" />
+          <span class="zoom-label">500%</span>
+        </div>
+        <div class="zoom-preset-btns">
+          <button data-zoom="25">25%</button>
+          <button data-zoom="50">50%</button>
+          <button data-zoom="75">75%</button>
+          <button data-zoom="100">100%</button>
+          <button data-zoom="125">125%</button>
+          <button data-zoom="150">150%</button>
+          <button data-zoom="200">200%</button>
+        </div>
+        <div class="sc-btns">
+          <button class="sc-btn" id="btnResetZoom" style="background:#2a3f5a;color:#b0ccee;">重置100%</button>
+        </div>
+        <div class="sc-divider"></div>
+        <h3><i class="fas fa-eye" style="color:#ff6b35;"></i> 浮窗设置</h3>
+        <div class="float-set-row">
+          <div class="float-set-label">透明度</div>
+          <div class="float-slider-container">
+            <span class="float-set-end">20%</span>
+            <input type="range" id="floatOpacitySlider" min="20" max="100" step="5" value="100" />
+            <span class="float-set-end">100%</span>
+          </div>
+          <div class="float-set-value" id="floatOpacityValue">100%</div>
+        </div>
+        <div class="float-set-row">
+          <div class="float-set-label">模糊度</div>
+          <div class="float-slider-container">
+            <span class="float-set-end">0px</span>
+            <input type="range" id="floatBlurSlider" min="0" max="24" step="1" value="8" />
+            <span class="float-set-end">24px</span>
+          </div>
+          <div class="float-set-value" id="floatBlurValue">8px</div>
+        </div>
+        <div class="sc-btns">
+          <button class="sc-btn" id="btnResetFloat" style="background:#2a3f5a;color:#b0ccee;">重置默认</button>
+        </div>
+      </div>
+      <!-- 所在地 -->
+      <div class="sc-panel" id="sc-home">
+        <h3><i class="fas fa-house-user" style="color:#00ff88;"></i> 设置所在地</h3>
+        <label for="homeLat">纬度 (Latitude)</label>
+        <input type="number" id="homeLat" step="any" placeholder="例如：39.9042" />
+        <label for="homeLng">经度 (Longitude)</label>
+        <input type="number" id="homeLng" step="any" placeholder="例如：116.4074" />
+        <div class="sc-btns">
+          <button class="sc-btn sc-btn-clear" id="btnClearHome">清除标记</button>
+          <button class="sc-btn" id="btnCancelHome" style="background:#2a3f5a;color:#b0ccee;">取消</button>
+          <button class="sc-btn" id="btnConfirmHome" style="background:#ff6b35;color:#fff;">确认</button>
+        </div>
+      </div>
+      <!-- 音频 -->
+      <div class="sc-panel" id="sc-audio">
+        <h3><i class="fas fa-volume-high" style="color:#a78bfa;"></i> 音频设置</h3>
+        <div id="audioSettingsList"></div>
+      </div>
+      <!-- 数据源 -->
+      <div class="sc-panel" id="sc-datasource">
+        <h3><i class="fas fa-database" style="color:#ffb347;"></i> 数据源设置</h3>
+        <div class="ds-section-title"><i class="fas fa-clock-rotate-left"></i> 地震历史数据源（单选）</div>
+        <label class="ds-option" data-source="wolfx-wss">
+          <input type="radio" name="ds" value="wolfx-wss" />
+          <div>
+            <div class="ds-label">api.wolfx.jp — WSS</div>
+            <div class="ds-desc">WebSocket 实时推送，延迟最低</div>
+          </div>
+        </label>
+        <label class="ds-option" data-source="wolfx-http">
+          <input type="radio" name="ds" value="wolfx-http" />
+          <div>
+            <div class="ds-label">api.wolfx.jp — HTTP GET</div>
+            <div class="ds-desc">HTTP 轮询方式</div>
+          </div>
+        </label>
+        <label class="ds-option active" data-source="ceic">
+          <input type="radio" name="ds" value="ceic" checked />
+          <div>
+            <div class="ds-label">中国地震台网 CEIC（默认）</div>
+            <div class="ds-desc">HTTP 轮询方式</div>
+          </div>
+        </label>
+        <!-- 地震预警数据源（已取消双线并行，单选） -->
+        <div class="ds-section-title"><i class="fas fa-bell"></i> 地震预警数据源（单选，默认成都高新减灾所）</div>
+        <label class="ds-option" data-eew-source="cenc-wss">
+          <input type="radio" name="eew-ds" value="cenc-wss" />
+          <div>
+            <div class="ds-label">CENC EEW — WSS</div>
+            <div class="ds-desc">WebSocket 实时推送，延迟最低</div>
+          </div>
+        </label>
+        <label class="ds-option" data-eew-source="cenc-http">
+          <input type="radio" name="eew-ds" value="cenc-http" />
+          <div>
+            <div class="ds-label">CENC EEW — HTTP GET</div>
+            <div class="ds-desc">HTTP 轮询方式</div>
+          </div>
+        </label>
+        <label class="ds-option active" data-eew-source="chinaeew">
+          <input type="radio" name="eew-ds" value="chinaeew" checked />
+          <div>
+            <div class="ds-label">成都高新减灾所 — HTTP GET（默认）</div>
+            <div class="ds-desc">HTTP 轮询方式</div>
+          </div>
+        </label>
+        <div class="sc-btns">
+          <button class="sc-btn" id="btnConfirmDs" style="background:#ff6b35;color:#fff;">确认切换</button>
+        </div>
+      </div>
+      <!-- 关于（原右侧关于页整体搬入） -->
+      <div class="sc-panel" id="sc-about">
+<div class="about-section">
+<h3><i class="fas fa-info-circle"></i> 平台简介</h3>
+<div class="about-desc">
+TQuake是一个实时自然灾害监测与可视化系统，整合多种数据源，提供地震、台风、海啸、火山、火灾、气象等灾害的综合态势感知能力。
+</div>
+</div>
+<div class="about-section">
+<h3><i class="fas fa-server"></i> 数据源 API</h3>
+<div class="about-item">
+<div class="about-icon" style="background:rgba(255,107,53,0.15);color:#ff6b35;"><i class="fas fa-bolt"></i></div>
+<div class="about-text">
+<div class="about-name">Wolfx API (ws-api.wolfx.jp)</div>
+<div class="about-role">地震实时预警 & 历史地震列表 WebSocket 数据推送</div>
+<a href="https://wolfx.jp/" target="_blank">wolfx.jp</a>
+</div>
+</div>
+<div class="about-item">
+<div class="about-icon" style="background:rgba(74,144,226,0.15);color:#4a90e2;"><i class="fas fa-water"></i></div>
+<div class="about-text">
+<div class="about-name">国家海洋预报台 (nmefc.cn)</div>
+<div class="about-role">海啸预警数据接口</div>
+<a href="https://www.nmefc.cn/" target="_blank">nmefc.cn</a>
+</div>
+</div>
+<div class="about-item">
+<div class="about-icon" style="background:rgba(139,195,74,0.15);color:#8bc34a;"><i class="fas fa-draw-polygon"></i></div>
+<div class="about-text">
+<div class="about-name">DataV GeoJSON (datav.aliyun.com)</div>
+<div class="about-role">中国省级 / 市级 / 区县级行政边界 GeoJSON 数据</div>
+<a href="https://datav.aliyun.com/" target="_blank">datav.aliyun.com</a>
+</div>
+</div>
+</div>
+<div class="about-section">
+<h3><i class="fas fa-heart"></i> 致谢开源项目</h3>
+<div class="about-item">
+<div class="about-icon" style="background:rgba(74,144,226,0.15);color:#4a90e2;"><i class="fas fa-leaf"></i></div>
+<div class="about-text">
+<div class="about-name">Leaflet</div>
+<div class="about-role">开源交互式地图库，提供地图渲染、图层管理、标记等核心功能</div>
+<a href="https://leafletjs.com/" target="_blank">leafletjs.com</a>
+</div>
+</div>
+<div class="about-item">
+<div class="about-icon" style="background:rgba(255,107,53,0.15);color:#ff6b35;"><i class="fab fa-font-awesome"></i></div>
+<div class="about-text">
+<div class="about-name">Font Awesome</div>
+<div class="about-role">图标字体库，提供平台所需的全部矢量图标</div>
+<a href="https://fontawesome.com/" target="_blank">fontawesome.com</a>
+</div>
+</div>
+<div class="about-item">
+<div class="about-icon" style="background:rgba(255,179,71,0.15);color:#ffb347;"><i class="fas fa-clock"></i></div>
+<div class="about-text">
+<div class="about-name">Day.js</div>
+<div class="about-role">轻量级日期处理库，用于时间格式化与显示</div>
+<a href="https://day.js.org/" target="_blank">day.js.org</a>
+</div>
+</div>
+<div class="about-item">
+<div class="about-icon" style="background:rgba(139,195,74,0.15);color:#8bc34a;"><i class="fas fa-wand-magic-sparkles"></i></div>
+<div class="about-text">
+<div class="about-name">Animate.css</div>
+<div class="about-role">CSS 动画库，用于界面过渡动效</div>
+<a href="https://animate.style/" target="_blank">animate.style</a>
+</div>
+</div>
+<div class="about-item">
+<div class="about-icon" style="background:rgba(0,255,136,0.12);color:#00ff88;"><i class="fab fa-js"></i></div>
+<div class="about-text">
+<div class="about-name">cdnjs / unpkg CDN</div>
+<div class="about-role">开源库 CDN 加速服务，提供前端依赖的快速加载</div>
+<a href="https://cdnjs.com/" target="_blank">cdnjs.com</a> · <a href="https://unpkg.com/" target="_blank">unpkg.com</a>
+</div>
+</div>
+</div>
+<div class="about-section">
+<h3><i class="fas fa-handshake"></i> 特别致谢</h3>
+<div class="about-item">
+<div class="about-icon" style="background:rgba(255,0,0,0.12);color:#ff4444;"><i class="fas fa-building-columns"></i></div>
+<div class="about-text">
+<div class="about-name">中国地震台网（CEIC）</div>
+<div class="about-role">中国地震局地震信息中心，提供权威的地震速报与历史地震数据，本平台地震数据源之一</div>
+<a href="https://www.ceic.ac.cn/" target="_blank">ceic.ac.cn</a>
+</div>
+</div>
+      <div class="about-item">
+        <div class="about-icon" style="background:rgba(255,107,53,0.15);color:#ff6b35;"><i class="fas fa-satellite-dish"></i></div>
+        <div class="about-text">
+          <div class="about-name">成都高新减灾研究所</div>
+          <div class="about-role">地震预警技术研发与数据服务，提供大陆地震预警API，本平台地震预警数据源之一</div>
+          <a href="http://www.365icl.com/" target="_blank">365icl.com</a>
+        </div>
+      </div>
+      <div class="about-item">
+        <div class="about-icon" style="background:rgba(33,150,243,0.15);">
+          <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+            <path d="M2 8.5c2.2-2.6 4.3-2.6 6.5 0s4.3 2.6 6.5 0 4.3-2.6 6.5 0" fill="none" stroke="#2196f3" stroke-width="2.4" stroke-linecap="round" opacity="0.55"/>
+            <path d="M2 14.5c2.2-2.6 4.3-2.6 6.5 0s4.3 2.6 6.5 0 4.3-2.6 6.5 0" fill="none" stroke="#2196f3" stroke-width="2.6" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="about-text">
+          <div class="about-name">国家海洋环境预报中心</div>
+          <div class="about-role">提供海浪、风暴潮等海洋警报实时数据，本平台海洋警报数据源</div>
+          <a href="https://www.nmefc.cn/" target="_blank">nmefc.cn</a>
+        </div>
+      </div>
+</div>
+<div class="about-section">
+<h3><i class="fas fa-code"></i> 技术说明</h3>
+<div class="about-desc" style="font-size:13px;">
+本平台使用纯前端技术（HTML5 + CSS3 + JavaScript）构建，无需后端服务器。地震数据通过第三方API接口实时推送，行政边界数据按需动态加载。烈度预估采用中国地震台网经验衰减公式并结合震源深度进行修正，仅供参考！
+</div>
+</div>
+<div id="eewEasterEggTarget" style="text-align:center; padding:20px 0 10px; color:#3a5a7a; font-size:12px; cursor:default; user-select:none;">
+<i class="fas fa-shield-halved" style="margin-right:4px;"></i> <span id="eewEggText">TQuake 1.1.9</span>
+</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
+<script>
+(function() {
+'use strict';
+/* ====== 免责声明弹窗逻辑 ====== */
+(function initDisclaimer() {
+    const overlay = document.getElementById('disclaimer-overlay');
+    const checkbox = document.getElementById('discAgreeCheck');
+    const btnEnter = document.getElementById('btnDiscEnter');
+    const btnExit = document.getElementById('btnDiscExit');
+    const checkboxRow = document.getElementById('discCheckboxRow');
+
+    // 检查 localStorage 是否已经同意过
+    const agreed = localStorage.getItem('disclaimer_agreed');
+    if (agreed === 'true') {
+        // 已经同意过，不显示弹窗
+        overlay.classList.add('hidden');
+        return;
+    }
+
+    // 第一次打开，显示弹窗
+    overlay.classList.remove('hidden');
+
+    // 点击勾选框行也可切换勾选状态
+    checkboxRow.addEventListener('click', function(e) {
+        if (e.target !== checkbox) {
+            checkbox.checked = !checkbox.checked;
+        }
+        btnEnter.disabled = !checkbox.checked;
+    });
+
+    checkbox.addEventListener('change', function() {
+        btnEnter.disabled = !checkbox.checked;
+    });
+
+    // 进入程序
+    btnEnter.addEventListener('click', function() {
+        if (!checkbox.checked) return;
+        localStorage.setItem('disclaimer_agreed', 'true');
+        overlay.classList.add('hidden');
+    });
+
+    // 退出程序
+    btnExit.addEventListener('click', function() {
+        // 尝试关闭窗口，如果无法关闭则显示提示
+        window.close();
+        // 如果 window.close() 无效（非脚本打开的窗口），则提示用户手动关闭
+        setTimeout(function() {
+            document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0a0e17;color:#8aa4c8;font-size:20px;font-family:sans-serif;text-align:center;padding:40px;">您已选择退出程序。<br>请手动关闭此标签页。</div>';
+        }, 300);
+    });
+})();
+const CONFIG = {
+WS_WOLFX_CENC_EEW: 'wss://ws-api.wolfx.jp/cenc_eew',
+WS_WOLFX_CENC_EQLIST: 'wss://ws-api.wolfx.jp/cenc_eqlist',
+API_CEIC_HISTORY: 'https://api.wolfx.jp/cenc_eqlist.json',
+API_CEIC_DIRECT: 'https://www.ceic.ac.cn/data/data.json',
+API_NMEFC_TSUNAMI: 'https://www.nmefc.cn/api/data/warning?',
+GEOJSON_CHINA_PROVINCE: 'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json',
+GEOJSON_CITY_TEMPLATE: 'https://geo.datav.aliyun.com/areas_v3/bound/{code}_full.json',
+REFRESH_EARTHQUAKE: 1000,
+REFRESH_TYPHOON: 60000,
+REFRESH_VOLCANO: 1000,
+REFRESH_FIRE: 1000,
+REFRESH_WEATHER: 1000,
+REFRESH_TSUNAMI_DEFAULT: 10000,
+REFRESH_TSUNAMI_ALERT: 10000, // 统一每10秒请求一次
+    API_CENC_EEW_HTTP: 'https://api.wolfx.jp/cenc_eew.json',
+    API_CHINAEWW: 'https://mobile-new.chinaeew.cn/v1/earlywarnings?start_at=&updates=',
+    P_WAVE_SPEED: 6.0,   // km/s
+    S_WAVE_SPEED: 3.5,   // km/s
+    SOUND_DIR: 'Sound/',
+    REFRESH_EEW_HTTP: 2000,
+};
+const INTENSITY_COLORS = [
+'#d0d0d0', '#a0c8e8', '#4a90e2', '#2e7d32', '#8bc34a',
+'#ffeb3b', '#ff9800', '#f44336', '#b71c1c', '#880e4f',
+'#4a148c', '#ff00ff'
+];
+const INTENSITY_ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+function getIntensityColor(intensity) {
+return INTENSITY_COLORS[Math.min(Math.max(Math.round(intensity) - 1, 0), 11)];
+}
+function hexToRgba(hex, alpha) {
+const r = parseInt(hex.slice(1, 3), 16);
+const g = parseInt(hex.slice(3, 5), 16);
+const b = parseInt(hex.slice(5, 7), 16);
+return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+function intensityToRoman(num) {
+const n = Math.min(Math.max(Math.round(num), 1), 12);
+return INTENSITY_ROMAN[n - 1] || String(num);
+}
+/* 【新增】震级格式化：统一显示为一位小数（如 M6、M6.00005 → 6.0） */
+function formatMag(mag) {
+const v = parseFloat(mag);
+return isNaN(v) ? '?' : v.toFixed(1);
+}
+/* 【新公式】震中烈度计算 - 基于中国地震烈度经验衰减关系
+ * I₀ = 0.24 + 1.29M - 0.26·ln(h)
+ * M = 震级, h = 震源深度(km)
+ * 深度越浅，震中烈度越高；深度越深，能量在传播中耗散越多，震中烈度越低
+ */
+function calcIntensity(mag, depth) {
+    const m = parseFloat(mag) || 0;
+    const h = Math.max(parseFloat(depth) || 10, 1); // 深度最小取1km，防止ln(0)
+    const I0 = 0.24 + 1.29 * m - 0.26 * Math.log(h);
+    return Math.min(12, Math.max(1, Math.round(I0)));
+}
+/* 统一烈度获取：始终通过震级+深度公式计算，不使用API提供的烈度值 */
+function getEqIntensity(eq) {
+const mag = parseFloat(eq.Magnitude || eq.magnitude || eq.Magunitude) || 0;
+const depth = parseFloat(eq.Depth || eq.depth || eq.shendu) || 10;
+return calcIntensity(mag, depth);
+}
+function getAdminLevel(code) {
+const c = String(code);
+if (c.endsWith('0000')) return 'province';
+if (c.endsWith('00')) return 'city';
+return 'district';
+}
+const PROVINCE_CODES = {
+'北京': '110000', '天津': '120000', '河北': '130000', '山西': '140000',
+'内蒙古': '150000', '辽宁': '210000', '吉林': '220000', '黑龙江': '230000',
+'上海': '310000', '江苏': '320000', '浙江': '330000', '安徽': '340000',
+'福建': '350000', '江西': '360000', '山东': '370000', '河南': '410000',
+'湖北': '420000', '湖南': '430000', '广东': '440000', '广西': '450000',
+'海南': '460000', '重庆': '500000', '四川': '510000', '贵州': '520000',
+'云南': '530000', '西藏': '540000', '陕西': '610000', '甘肃': '620000',
+'青海': '630000', '宁夏': '640000', '新疆': '650000', '台湾': '710000',
+'香港': '810000', '澳门': '820000'
+};
+const STATE = {
+earthquakes: [], eqAlert: null, typhoons: [], fires: [],
+map: null,
+eqMarkersLayer: null, typhoonMarkersLayer: null, fireMarkersLayer: null,
+provinceLayer: null,
+cityLayer: null,
+intensityOverlayLayer: null,
+geoJsonData: null,
+currentZoom: 5,
+intensityMode: false,
+currentDetailEq: null,
+activeIntensityEqId: null,
+lastEqListSnapshot: '',
+cityGeoJsonCache: {},
+apiStats: [],
+apiStatsSummary: { totalCalls: 0, successes: 0, failures: 0, totalDataSize: 0, totalLatency: 0 },
+tsunamiRefreshTimer: null, tsunamiAlertMode: false, tsunamiModeTimeout: null, tsunamiFirstPoll: true, tsunamiKnownIds: null,
+highlightedLayer: null, highlightTimer: null,
+firstEqLoad: true,
+latestEqData: null,
+_pendingLatestEq: null, // 预警/回看期间暂存的新地震数据
+homeMarker: null,
+homeLat: null,
+homeLng: null,
+wsEqlistConsecutiveFails: 0,
+wsEqlistTotalFails: 0,
+wsEqlistFallback: false,
+wsEqlistFallbackTimer: null,
+eqDataSource: 'ceic',
+ceicRefreshTimer: null,
+  // 地震预警相关
+  eewAlerts: [],
+  eewActiveSources: { 'cenc-wss': false, 'cenc-http': false, 'chinaeew': true },
+  eewSeenKeys: new Set(),
+  eewHttpTimer: null,
+  eewChinaEwwTimer: null,
+  eewLayer: null,
+  eewAnimating: false,
+  eewAnimFrame: null,
+  eewCurrentAlert: null,
+  eewReviewMode: false,
+  eewReviewTime: null,
+  eewModuleVisible: false,
+  eewEggClickCount: 0,
+  eewEggTimer: null,
+  // 音频相关
+  audioEnabled: true,
+  audioFiles: {
+    'eq-happened': '地震发生.mp3',
+    'eq-update': '地震更新.mp3',
+    'strong-eq': '强震.mp3',
+    'eew-weak': '地震预警（弱）.wav',
+    'eew-strong': '地震预警（强）.wav',
+    'eq-history': '地震历史通知.wav',
+  },
+eewCencWsInstance: null,
+eewCencHttpActive: false,
+eewCanvasRenderer: null,
+_eewMapMoveHandler: null,   // 实时预警地图事件处理器引用
+_eewMapResizeHandler: null, // 实时预警resize事件处理器引用
+  eewSoundCooldown: {},      // 音效冷却 { eventId: timestamp }
+eewLastProcessedId: null,
+_eewDelayTimer: null,   // 新增
+// ====== 双线并行报次跟踪 ======
+// 按事件ID跟踪每个地震预警的当前报次状态
+// key = eventId, value = {
+//   reportNum: 当前报次号(1,2,3...),
+//   magnitude: 上一次处理的震级,
+//   intensity: 上一次处理的烈度,
+//   cencSnapshot: CENC报文快照(用于CENC无update字段时的差异比对),
+//   lastSoundTime: 上次音效播放时间戳,
+//   strongEverPlayedAbove: 曾经播放过强震音效的最高震级阈值(用于7→8不重播)
+// }
+eewReportTracker: {},
+};
+const DOM = {
+eqHistoryList: document.getElementById('eqHistoryList'),
+eqHistoryCount: document.getElementById('eqHistoryCount'),
+typhoonDetail: document.getElementById('typhoonDetail'),
+typhoonCount: document.getElementById('typhoonCount'),
+tsunamiAlert: document.getElementById('tsunamiAlert'),
+tsunamiStatusBadge: document.getElementById('tsunamiStatusBadge'),
+volcanoAlert: document.getElementById('volcanoAlert'),
+fireDetail: document.getElementById('fireDetail'), fireCount: document.getElementById('fireCount'),
+weatherAlert: document.getElementById('weatherAlert'),
+dataCount: document.getElementById('dataCount'),
+headerTime: document.getElementById('headerTime'),
+apiTotalCalls: document.getElementById('apiTotalCalls'),
+apiStatsList: document.getElementById('apiStatsList'),
+statTotalCalls: document.getElementById('statTotalCalls'),
+statSuccessRate: document.getElementById('statSuccessRate'),
+statTotalData: document.getElementById('statTotalData'),
+statAvgLatency: document.getElementById('statAvgLatency'),
+geoProgress: document.getElementById('geoProgress'),
+geoStatus: document.getElementById('geoStatus'),
+loadingOverlay: document.getElementById('map-loading-overlay'),
+legend: document.getElementById('intensity-legend'),
+legendItems: document.getElementById('legend-items'),
+lepBody: document.getElementById('lepBody'),
+lepTitle: document.getElementById('lepTitle'),
+lepReport: document.getElementById('lepReport'),
+latestEqPanel: document.getElementById('latest-eq-panel'),
+wsStatusDot: document.getElementById('wsStatusDot'),
+wsStatusText: document.getElementById('wsStatusText'),
+sidePanel: document.getElementById('side-panel'),
+eqHistoryFloat: document.getElementById('eq-history-float'),
+  eewHistoryFloat: document.getElementById('eew-history-float'),
+  eewList: document.getElementById('eewList'),
+  eewCount: document.getElementById('eewCount'),
+  eewCountdownPanel: document.getElementById('eew-countdown-panel'),
+  cdTime: document.getElementById('cdTime'),
+  cdIntensity: document.getElementById('cdIntensity'),
+  navEew: document.getElementById('navEew'),
+  platformTitle: document.getElementById('platformTitle'),
+};
+/* ====== API统计记录 ====== */
+function recordApiCall(api, method, status, size, lat, err) {
+const rec = {
+id: Date.now() + Math.random(), apiName: api, method, status,
+dataSize: size || 0, latency: lat || 0, errorMsg: err || null,
+timestamp: new Date().toISOString()
+};
+STATE.apiStats.unshift(rec);
+if (STATE.apiStats.length > 200) STATE.apiStats = STATE.apiStats.slice(0, 200);
+STATE.apiStatsSummary.totalCalls++;
+if ((status >= 200 && status < 400) || status === 'ws_ok') STATE.apiStatsSummary.successes++;
+else STATE.apiStatsSummary.failures++;
+STATE.apiStatsSummary.totalDataSize += (size || 0);
+STATE.apiStatsSummary.totalLatency += (lat || 0);
+DOM.apiTotalCalls.textContent = STATE.apiStatsSummary.totalCalls;
+}
+function renderApiStats() {
+const s = STATE.apiStatsSummary, total = s.totalCalls || 1;
+DOM.statTotalCalls.textContent = s.totalCalls;
+DOM.statSuccessRate.textContent = Math.round((s.successes / total) * 100) + '%';
+DOM.statTotalData.textContent = (s.totalDataSize / 1024).toFixed(1) + ' KB';
+DOM.statAvgLatency.textContent = Math.round(s.totalLatency / total) + ' ms';
+if (!STATE.apiStats.length) {
+DOM.apiStatsList.innerHTML = '<div class="info-card"><div class="detail" style="text-align:center;color:#6a8aaa;font-size:14px;">等待API调用...</div></div>';
+return;
+}
+let html = '';
+STATE.apiStats.slice(0, 50).forEach(r => {
+const ok = (r.status >= 200 && r.status < 400) || r.status === 'ws_ok';
+const cls = ok ? 'success' : 'error';
+const sz = r.dataSize > 1024 ? (r.dataSize / 1024).toFixed(1) + ' KB' : r.dataSize + ' B';
+const statusText = r.status === 'ws_ok' ? 'WS连接' : r.status === 'error' ? '错误' : r.status === 'closed' ? '断开' : r.status;
+const latText = r.latency > 0 ? r.latency + 'ms' : '-';
+html += `<div class="api-stat-row ${cls}">
+<div class="api-name">${r.apiName}</div>
+<div class="api-meta">
+<span>${r.method}</span>
+<span>${statusText}</span>
+<span>${sz}</span>
+<span>${latText}</span>
+<span>${dayjs(r.timestamp).format('HH:mm:ss')}</span>
+</div>
+</div>`;
+});
+DOM.apiStatsList.innerHTML = html;
+}
+const origFetch = window.fetch;
+window.fetch = function(url, opt) {
+const start = performance.now();
+const method = (opt && opt.method) || 'GET';
+const name = typeof url === 'string' ? url.split('?')[0].split('/').slice(-2).join('/') : 'unknown';
+return origFetch.apply(this, arguments).then(resp => {
+const lat = Math.round(performance.now() - start);
+resp.clone().text().then(t => recordApiCall(name, method, resp.status, new Blob([t]).size, lat))
+.catch(() => recordApiCall(name, method, resp.status, 0, lat));
+return resp;
+}).catch(err => {
+recordApiCall(name, method, 'error', 0, Math.round(performance.now() - start), err.message);
+throw err;
+});
+};
+/* ====== 工具函数 ====== */
+function calcDistance(lat1, lon1, lat2, lon2) {
+const R = 6371;
+const dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
+const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+function initLegend() {
+let html = '<div style="display:flex; flex-direction:column; gap:5px;">';
+INTENSITY_COLORS.forEach((color, i) => {
+html += `<div style="display:flex; align-items:center; gap:8px; font-size:13px; color:#e0e6f0;">
+<span style="display:inline-block; width:24px; height:16px; background:${color}; border-radius:3px; border:1px solid rgba(255,255,255,0.3); flex-shrink:0;"></span>
+<span>${INTENSITY_ROMAN[i]}度</span>
+</div>`;
+});
+html += '</div>';
+DOM.legendItems.innerHTML = html;
+}
+function showLegend() { DOM.legend.style.display = 'block'; }
+function hideLegend() { DOM.legend.style.display = 'none'; }
+function getEpicenterXIconHtml() {
+return `<svg viewBox="0 0 28 28" width="38" height="38">
+<line x1="4" y1="4" x2="24" y2="24" stroke="#ffffff" stroke-width="7.5" stroke-linecap="round"/>
+<line x1="24" y1="4" x2="4" y2="24" stroke="#ffffff" stroke-width="7.5" stroke-linecap="round"/>
+<line x1="4" y1="4" x2="24" y2="24" stroke="#ff0000" stroke-width="3.5" stroke-linecap="round"/>
+<line x1="24" y1="4" x2="4" y2="24" stroke="#ff0000" stroke-width="3.5" stroke-linecap="round"/>
+</svg>`;
+}
+function addEpicenterMarker(lat, lon) {
+const xIcon = L.divIcon({
+html: getEpicenterXIconHtml(),
+iconSize: [38, 38],
+iconAnchor: [19, 19],
+className: ''
+});
+L.marker([lat, lon], { icon: xIcon, zIndexOffset: 1000 })
+.bindTooltip('震中', { permanent: false, className: 'custom-tooltip' })
+.addTo(STATE.intensityOverlayLayer);
+}
+/* 【新公式】基于震源距的烈度衰减计算
+ * 
+ * 核心物理原理：使用震源距(hypocentral distance)而非震中距(epicentral distance)
+ *   R = √(Δ² + h²)
+ *   Δ = 震中距(km), h = 震源深度(km)
+ * 
+ * 衰减公式：I = I₀ - 1.5·log₁₀(R/h) - 0.003·(R - h)
+ * 
+ * 特性：
+ *   - 震中正上方(Δ=0)：R=h，I=I₀，无衰减
+ *   - 浅源地震(h小)：R/h增长快，衰减陡峭，影响范围小
+ *   - 深源地震(h大)：R/h增长慢，衰减平缓，影响范围大但峰值低
+ *   - 自然符合"极浅层地震影响范围小"的现实常识
+ */
+function calcIntensityByDistance(I0, dist, depth) {
+    const h = Math.max(parseFloat(depth) || 10, 1);
+    const delta = Math.max(dist, 0);
+    
+    // 震源距 = √(震中距² + 深度²)
+    const R = Math.sqrt(delta * delta + h * h);
+    
+    // 衰减计算
+    const logTerm = 1.5 * Math.log10(R / h);        // 几何扩散衰减
+    const linearTerm = 0.003 * (R - h);              // 介质吸收衰减
+    
+    const intensity = I0 - logTerm - linearTerm;
+    
+    return Math.max(0, Math.min(12, intensity)); // 返回原始值，不做四舍五入和最小值限制
+}
+/* ====== 地图初始化 ====== */
+function initMap() {
+const map = L.map('map', { center: [35, 105], zoom: 5, zoomControl: false, attributionControl: false });
+STATE.map = map;
+STATE.currentZoom = map.getZoom();
+map.on('zoomend', () => {
+STATE.currentZoom = map.getZoom();
+clearClickHighlight();
+if (STATE.provinceLayer) {
+STATE.provinceLayer.eachLayer(l => {
+if (l.feature) { l._clickHighlighted = false; l.setStyle(getProvinceStyle(l.feature, STATE.currentZoom)); }
+});
+}
+});
+STATE.eqMarkersLayer = L.layerGroup().addTo(map);
+STATE.typhoonMarkersLayer = L.layerGroup().addTo(map);
+STATE.fireMarkersLayer = L.layerGroup().addTo(map);
+STATE.intensityOverlayLayer = L.layerGroup().addTo(map);
+STATE.cityLayer = L.layerGroup().addTo(map);
+map.on('click', function(e) {
+    // 地震预警动画播放期间，禁止点击清除烈度分布图
+    if (!STATE.eewAnimating) {
+        clearIntensityMapSilent();
+    }
+    clearClickHighlight();
+});
+loadChinaGeoJSON(map);
+loadHomePosition();
+return map;
+}
+function getProvinceStyle(feature, zoom) {
+const level = getAdminLevel(feature.properties.adcode || '');
+if (level === 'province') {
+if (zoom < 7) return { color: '#5a8ab8', weight: 2.0, opacity: 0.8, fillColor: 'transparent', fillOpacity: 0, interactive: false };
+else if (zoom < 9) return { color: '#4a7aaa', weight: 1.8, opacity: 0.75, fillColor: 'transparent', fillOpacity: 0, interactive: false };
+else return { color: '#4a7aaa', weight: 1.6, opacity: 0.7, fillColor: 'transparent', fillOpacity: 0, interactive: false };
+} else if (level === 'city') {
+if (zoom >= 7) return { color: '#3a6a8a', weight: 1.0, opacity: 0.6, fillColor: 'transparent', fillOpacity: 0, interactive: false };
+else return { color: '#3a6a8a', weight: 0, opacity: 0, fillColor: 'transparent', fillOpacity: 0, interactive: false };
+} else {
+if (zoom >= 9) return { color: '#2a5a6a', weight: 0.7, opacity: 0.5, fillColor: 'transparent', fillOpacity: 0, interactive: false };
+else return { color: '#2a5a6a', weight: 0, opacity: 0, fillColor: 'transparent', fillOpacity: 0, interactive: false };
+}
+}
+function loadChinaGeoJSON(map) {
+DOM.geoStatus.textContent = '正在获取省级边界数据...';
+DOM.geoProgress.style.width = '25%';
+fetch(CONFIG.GEOJSON_CHINA_PROVINCE)
+.then(res => {
+if (!res.ok) throw new Error('HTTP ' + res.status);
+DOM.geoProgress.style.width = '60%';
+DOM.geoStatus.textContent = '数据接收成功，解析中...';
+return res.json();
+})
+.then(data => {
+DOM.geoProgress.style.width = '85%';
+DOM.geoStatus.textContent = '正在渲染地图边界...';
+STATE.geoJsonData = data;
+const layer = L.geoJSON(data, {
+style: feature => getProvinceStyle(feature, STATE.currentZoom),
+onEachFeature: function(feature, lyr) {
+lyr._clickHighlighted = false;
+lyr.on('mouseover', function(e) {
+e.target.setStyle({ color: '#ffb347', weight: 2.5, opacity: 1 });
+const name = feature.properties.name || '未知';
+e.target.bindTooltip(name, { permanent: false, className: 'custom-tooltip' }).openTooltip();
+});
+lyr.on('mouseout', function(e) {
+e.target.setStyle(getProvinceStyle(feature, STATE.currentZoom));
+e.target.closeTooltip();
+});
+}
+}).addTo(map);
+STATE.provinceLayer = layer;
+DOM.geoProgress.style.width = '100%';
+DOM.geoStatus.textContent = '省级边界加载完成';
+setTimeout(() => {
+DOM.loadingOverlay.classList.add('fade-out');
+setTimeout(() => { DOM.loadingOverlay.style.display = 'none'; }, 500);
+}, 600);
+})
+.catch(err => {
+console.warn('省级数据加载失败', err);
+DOM.geoStatus.textContent = '❌ 地图边界加载失败';
+DOM.loadingOverlay.innerHTML = '<div style="color:#ff4444;text-align:center;padding:20px;font-size:24px;"><i class="fas fa-exclamation-circle"></i> 地理数据加载失败，请刷新重试</div>';
+});
+}
+/* ====== 【修改3&4&5】烈度分布计算 - 统一烈度、引入深度、修正烈度I阈值 ====== */
+async function applyIntensityMap(eq) {
+if (!eq) return;
+const eqLat = parseFloat(eq.latitude || eq.Latitude) || 0;
+const eqLon = parseFloat(eq.longitude || eq.Longitude) || 0;
+const mag = parseFloat(eq.magnitude || eq.Magnitude || eq.Magunitude) || 0;
+const depth = parseFloat(eq.depth || eq.Depth || eq.shendu) || 10;
+if (!eqLat || !eqLon) return;
+/* 【修改3】震中烈度统一使用 getEqIntensity，与左上角和右侧卡片完全一致 */
+const I0 = getEqIntensity(eq);
+clearIntensityMapSilent();
+clearClickHighlight();
+STATE.intensityMode = true;
+STATE.activeIntensityEqId = eq.id || (eq.EventID || (eq.time + eq.latitude + eq.longitude));
+/* 【修改2】不再显示加载弹窗 */
+STATE.map.setView([eqLat, eqLon], 7, { animate: false });
+updateLatestEqPanel(eq, 'intensity');
+if (!STATE.geoJsonData || !STATE.geoJsonData.features) {
+return;
+}
+    const FILL_OPACITY = 0.42;
+    addEpicenterMarker(eqLat, eqLon);
+    // 【修复】立即显示图例，不再等待async循环完成
+    showLegend();
+    let hasRenderedAny = false;
+for (const feature of STATE.geoJsonData.features) {
+const provCode = String(feature.properties.adcode);
+const provName = feature.properties.name || '';
+let cityData = STATE.cityGeoJsonCache[provCode];
+if (!cityData) {
+const url = CONFIG.GEOJSON_CITY_TEMPLATE.replace('{code}', provCode);
+try {
+const res = await fetch(url);
+if (res.ok) {
+cityData = await res.json();
+STATE.cityGeoJsonCache[provCode] = cityData;
+} else {
+continue;
+}
+} catch (e) {
+console.warn('加载市级数据失败:', provCode, provName, e);
+continue;
+}
+}
+if (!cityData || !cityData.features || !cityData.features.length) continue;
+for (const cityFeature of cityData.features) {
+const tempLayer = L.geoJSON(cityFeature);
+const center = tempLayer.getBounds().getCenter();
+            const dist = calcDistance(eqLat, eqLon, center.lat, center.lng);
+
+            /* 判断震中是否落在该行政区域多边形内（射线法） */
+            let epicenterInside = false;
+            try {
+                const coords = cityFeature.geometry.type === 'MultiPolygon'
+                    ? cityFeature.geometry.coordinates.flat()
+                    : cityFeature.geometry.coordinates;
+                for (const ring of coords) {
+                    let inside = false;
+                    for (let pi = 0, pj = ring.length - 1; pi < ring.length; pj = pi++) {
+                        const xi = ring[pi][0], yi = ring[pi][1];
+                        const xj = ring[pj][0], yj = ring[pj][1];
+                        if (((yi > eqLat) !== (yj > eqLat)) &&
+                            (eqLon < (xj - xi) * (eqLat - yi) / (yj - yi) + xi)) {
+                            inside = !inside;
+                        }
+                    }
+                    if (inside) { epicenterInside = true; break; }
+                }
+            } catch(e) {}
+
+            /* 传入深度参数，使用震源距衰减公式 */
+            let rawIntensity = calcIntensityByDistance(I0, dist, depth);
+
+            /* 【烈度I阈值修正】图例显示I度，但实际按1.5作为最低渲染阈值
+             * 计算烈度 < 1.5 的区域不在地图上标识，避免地图全部变成I度
+             * >= 1.5 的值四舍五入后显示（1.5~2.4→II度，2.5~3.4→III度...）
+             */
+            if (rawIntensity < 1.5 && !epicenterInside) continue; // 低于1.5且震中不在区域内则不渲染
+
+            /* 震中所在区域直接赋予震中烈度I₀，确保与右侧卡片一致 */
+            let intensity;
+            if (epicenterInside) {
+                intensity = I0; // 震中所在区域直接显示震中烈度
+            } else {
+                intensity = Math.min(12, Math.round(rawIntensity));
+            }
+hasRenderedAny = true;
+const level = getAdminLevel(cityFeature.properties.adcode || '');
+const intColor = getIntensityColor(intensity);
+const weightVal = level === 'district' ? 1.0 : 1.5;
+const cityLayer = L.geoJSON(cityFeature, {
+style: {
+color: intColor,
+weight: weightVal,
+opacity: 0.85,
+fillColor: intColor,
+fillOpacity: FILL_OPACITY,
+interactive: false
+}
+});
+const name = cityFeature.properties.name || '未知';
+const levelLabel = level === 'city' ? '市' : level === 'district' ? '区县' : '省';
+/* 【修改3】tooltip中显示的烈度与左上角和右侧完全一致 */
+cityLayer.bindTooltip(
+`${name} [${levelLabel}]<br>预估烈度: <b style="color:${intColor}">${intensityToRoman(intensity)}度</b>`,
+{ permanent: false, className: 'custom-tooltip' }
+);
+cityLayer.addTo(STATE.cityLayer);
+}
+}
+    /* 【修改2】不再调用showIntensityLoading(false) */
+    updateAllIntensityButtons();
+    // showLegend() 已移至函数开头，此处不再调用
+}
+/* 地震预警专用烈度图：仅渲染行政区划填色，不添加震中X图标
+ * 解决 applyIntensityMap 是 async 函数、await 返回后才 addEpicenterMarker
+ * 导致白色描边X覆盖黄色闪烁X的问题
+ * 地震预警的震中图标由 eewLayer 的闪烁X独立管理
+ */
+async function applyIntensityMapNoMarker(eq) {
+    if (!eq) return;
+    const eqLat = parseFloat(eq.latitude || eq.Latitude) || 0;
+    const eqLon = parseFloat(eq.longitude || eq.Longitude) || 0;
+    const mag = parseFloat(eq.magnitude || eq.Magnitude || eq.Magunitude) || 0;
+    const depth = parseFloat(eq.depth || eq.Depth || eq.shendu) || 10;
+    if (!eqLat || !eqLon) return;
+    const I0 = getEqIntensity(eq);
+    clearIntensityMapSilent();
+    clearClickHighlight();
+    STATE.intensityMode = true;
+    STATE.activeIntensityEqId = eq.id || (eq.EventID || (eq.time + eq.latitude + eq.longitude));
+    STATE.map.setView([eqLat, eqLon], 7, { animate: false });
+    updateLatestEqPanel(eq, 'intensity');
+    if (!STATE.geoJsonData || !STATE.geoJsonData.features) return;
+    const FILL_OPACITY = 0.42;
+    // 【修复】立即显示图例，不再等待async循环完成
+    showLegend();
+    for (const feature of STATE.geoJsonData.features) {
+        const provCode = String(feature.properties.adcode);
+        let cityData = STATE.cityGeoJsonCache[provCode];
+        if (!cityData) {
+            const url = CONFIG.GEOJSON_CITY_TEMPLATE.replace('{code}', provCode);
+            try {
+                const res = await fetch(url);
+                if (res.ok) { cityData = await res.json(); STATE.cityGeoJsonCache[provCode] = cityData; }
+                else continue;
+            } catch (e) { continue; }
+        }
+        if (!cityData || !cityData.features || !cityData.features.length) continue;
+        for (const cityFeature of cityData.features) {
+            const tempLayer = L.geoJSON(cityFeature);
+            const center = tempLayer.getBounds().getCenter();
+            const dist = calcDistance(eqLat, eqLon, center.lat, center.lng);
+            let epicenterInside = false;
+            try {
+                const coords = cityFeature.geometry.type === 'MultiPolygon'
+                    ? cityFeature.geometry.coordinates.flat() : cityFeature.geometry.coordinates;
+                for (const ring of coords) {
+                    let inside = false;
+                    for (let pi = 0, pj = ring.length - 1; pi < ring.length; pj = pi++) {
+                        const xi = ring[pi][0], yi = ring[pi][1];
+                        const xj = ring[pj][0], yj = ring[pj][1];
+                        if (((yi > eqLat) !== (yj > eqLat)) &&
+                            (eqLon < (xj - xi) * (eqLat - yi) / (yj - yi) + xi)) { inside = !inside; }
+                    }
+                    if (inside) { epicenterInside = true; break; }
+                }
+            } catch(e) {}
+            let rawIntensity = calcIntensityByDistance(I0, dist, depth);
+            if (rawIntensity < 1.5 && !epicenterInside) continue;
+            let intensity = epicenterInside ? I0 : Math.min(12, Math.round(rawIntensity));
+            const level = getAdminLevel(cityFeature.properties.adcode || '');
+            const intColor = getIntensityColor(intensity);
+            const weightVal = level === 'district' ? 1.0 : 1.5;
+            const cityLayer = L.geoJSON(cityFeature, {
+                style: { color: intColor, weight: weightVal, opacity: 0.85, fillColor: intColor, fillOpacity: FILL_OPACITY, interactive: false }
+            });
+            const name = cityFeature.properties.name || '未知';
+            const levelLabel = level === 'city' ? '市' : level === 'district' ? '区县' : '省';
+            cityLayer.bindTooltip(
+                `${name} [${levelLabel}]<br>预估烈度: <b style="color:${intColor}">${intensityToRoman(intensity)}度</b>`,
+                { permanent: false, className: 'custom-tooltip' }
+            );
+            cityLayer.addTo(STATE.cityLayer);
+        }
+    }
+    // 注意：此处不调用 addEpicenterMarker，震中X图标由 eewLayer 的闪烁图标独立管理
+    updateAllIntensityButtons();
+    // showLegend() 已移至函数开头，此处不再调用
+}
+function clearIntensityMapSilent() {
+STATE.intensityMode = false;
+STATE.activeIntensityEqId = null;
+if (STATE.cityLayer) STATE.cityLayer.clearLayers();
+if (STATE.intensityOverlayLayer) STATE.intensityOverlayLayer.clearLayers();
+if (STATE.provinceLayer) {
+STATE.provinceLayer.eachLayer(function(layer) {
+if (layer.feature) {
+layer.setStyle(getProvinceStyle(layer.feature, STATE.currentZoom));
+layer.unbindTooltip();
+const feature = layer.feature;
+layer.on('mouseover', function(e) {
+e.target.setStyle({ color: '#ffb347', weight: 2.5, opacity: 1 });
+const name = feature.properties.name || '未知';
+e.target.bindTooltip(name, { permanent: false, className: 'custom-tooltip' }).openTooltip();
+});
+layer.on('mouseout', function(e) {
+e.target.setStyle(getProvinceStyle(feature, STATE.currentZoom));
+e.target.closeTooltip();
+});
+}
+});
+}
+hideLegend();
+updateAllIntensityButtons();
+if (STATE.latestEqData) {
+updateLatestEqPanel(STATE.latestEqData, 'latest');
+} else {
+resetLatestEqPanel();
+}
+}
+// 【新增】消费暂存的地震数据：如果预警/回看已结束且有暂存数据，则自动更新面板和烈度图
+function consumePendingLatestEq() {
+if (STATE._pendingLatestEq && !STATE.eewAnimating && !STATE.eewReviewMode) {
+const eq = STATE._pendingLatestEq;
+STATE._pendingLatestEq = null;
+STATE.latestEqData = eq;
+// 预警/回看期间地图上一直显示着烈度图，退出后历史地震栏更新时
+// 自动把最新历史地震的烈度分布图渲染到地图上，保持行为连贯
+applyIntensityMap(eq);
+}
+}
+function clearClickHighlight() {
+if (STATE.highlightTimer) { clearTimeout(STATE.highlightTimer); STATE.highlightTimer = null; }
+if (STATE.highlightedLayer) {
+STATE.highlightedLayer._clickHighlighted = false;
+if (STATE.highlightedLayer.feature) STATE.highlightedLayer.setStyle(getProvinceStyle(STATE.highlightedLayer.feature, STATE.currentZoom));
+STATE.highlightedLayer = null;
+}
+}
+function updateAllIntensityButtons() {
+document.querySelectorAll('.intensity-btn-float').forEach(btn => {
+const eqId = btn.dataset.eqId;
+if (eqId && STATE.activeIntensityEqId === eqId) {
+btn.textContent = '隐藏烈度';
+btn.classList.add('hide-mode');
+btn.classList.remove('loading');
+} else {
+btn.textContent = '显示烈度';
+btn.classList.remove('hide-mode');
+btn.classList.remove('loading');
+}
+});
+}
+// 普通模式：显示"中国地震台网"作为标题
+if (DOM.lepTitle) {
+DOM.lepTitle.textContent = '中国地震台网';
+}
+if (DOM.lepReport) {
+DOM.lepReport.style.display = 'none';
+}
+/* ====== 【修改3】统一使用 getEqIntensity 计算烈度，确保左上角、右侧卡片、地图完全一致 ====== */
+function updateLatestEqPanel(eq, mode) {
+const mag = formatMag(eq.Magnitude || eq.magnitude || eq.Magunitude);
+const loc = eq.Hypocenter || eq.HypoCenter || eq.location || eq.weizhi || '未知';
+const time = eq.OriginTime || eq.ReportTime || eq.addtime || eq.time || '';
+const depth = eq.Depth || eq.depth || eq.shendu || '?';
+/* 【修改3】统一使用 getEqIntensity 计算烈度 */
+const intensity = getEqIntensity(eq);
+const color = getIntensityColor(intensity);
+const romanI = intensityToRoman(intensity);
+const formattedDate = time ? dayjs(time).format('YYYY-MM-DD') : '----/--/--';
+const formattedClock = time ? dayjs(time).format('HH:mm:ss') : '--:--:--';
+DOM.lepBody.innerHTML = `
+<div class="lep-main-row">
+<div class="lep-intensity-wrapper">
+<div class="lep-intensity-bg" style="background:${color};"></div>
+<span class="lep-intensity-big" style="color:${color};">${romanI}</span>
+<span class="lep-intensity-unit" style="color:${color};">烈度</span>
+</div>
+<div class="lep-side-info">
+<div class="lep-loc-inline">${loc}</div>
+<div class="lep-time-inline"><span class="lep-time-val"><span>${formattedDate}</span><span>${formattedClock}</span></span></div>
+<div class="lep-mag-depth-row" style="margin-top:2px;">
+<span class="lep-mag-small" style="font-size:20px;">M${mag}</span>
+<span class="lep-depth-small"><span class="lep-depth-label">深度</span><span class="lep-depth-value">${depth}km</span></span>
+</div>
+</div>
+</div>
+`;
+DOM.latestEqPanel.classList.remove('panel-highlight');
+if (mode === 'intensity') {
+void DOM.latestEqPanel.offsetWidth;
+DOM.latestEqPanel.classList.add('panel-highlight');
+}
+}
+function resetLatestEqPanel() {
+// 默认标题：中国地震台网
+if (DOM.lepTitle) {
+DOM.lepTitle.textContent = '中国地震台网';
+}
+if (DOM.lepReport) {
+DOM.lepReport.style.display = 'none';
+}
+DOM.lepBody.innerHTML = `
+<div class="lep-empty">
+<i class="fas fa-hourglass-half"></i>
+等待地震数据...
+</div>
+`;
+DOM.latestEqPanel.classList.remove('panel-highlight');
+}
+/* ====== WebSocket状态指示器更新 ====== */
+function updateWsStatusIndicator() {
+if (STATE.eqDataSource === 'ceic') {
+/* CEIC 模式：走 HTTP 轮询，不建立 WS 连接 */
+DOM.wsStatusDot.className = 'ws-dot ws-fallback';
+DOM.wsStatusText.textContent = '数据源: CEIC (HTTP轮询)';
+} else if (STATE.wsEqlistFallback) {
+DOM.wsStatusDot.className = 'ws-dot ws-fallback';
+DOM.wsStatusText.textContent = 'WS降级→HTTP GET';
+} else if (STATE.wsEqlistConsecutiveFails > 0) {
+DOM.wsStatusDot.className = 'ws-dot ws-fail';
+DOM.wsStatusText.textContent = `WS重连中(${STATE.wsEqlistConsecutiveFails}次)`;
+} else {
+DOM.wsStatusDot.className = 'ws-dot ws-ok';
+DOM.wsStatusText.textContent = 'WS: 已连接';
+}
+}
+/* ====== CEIC 官方 API 数据格式转换 ======
+ * CEIC (ceic.ac.cn) 返回格式：
+ *   { id, time, latitude, longitude, depth, magnitude, location }
+ * 统一转为 Wolfx 兼容格式：
+ *   { EventID, OriginTime, Latitude, Longitude, Depth, Magnitude, Hypocenter }
+ */
+function convertCeicData(ceicList) {
+if (!Array.isArray(ceicList)) return [];
+return ceicList.map(item => ({
+EventID: item.id || item.ID || '',
+OriginTime: item.time || item.O_TIME || '',
+Latitude: parseFloat(item.latitude || item.EPI_LAT) || 0,
+Longitude: parseFloat(item.longitude || item.EPI_LON) || 0,
+Depth: parseFloat(item.depth || item.EPI_DEPTH) || 10,
+Magnitude: parseFloat(item.magnitude || item.EQ_MAG || item.Magunitude) || 0,
+Hypocenter: item.location || item.LOCATION_C || '未知',
+/* 保留原始小写字段作为兼容 */
+id: item.id || '',
+time: item.time || '',
+latitude: parseFloat(item.latitude) || 0,
+longitude: parseFloat(item.longitude) || 0,
+depth: parseFloat(item.depth) || 10,
+magnitude: parseFloat(item.magnitude) || 0,
+location: item.location || '未知',
+}));
+}
+
+/* ====== 根据当前数据源获取地震历史 ====== */
+function fetchByDataSource() {
+if (STATE.ceicRefreshTimer) { clearInterval(STATE.ceicRefreshTimer); STATE.ceicRefreshTimer = null; }
+
+const src = STATE.eqDataSource;
+if (src === 'wolfx-wss') {
+/* 使用 WSS（默认行为），重新连接 */
+STATE.wsEqlistFallback = false;
+STATE.wsEqlistConsecutiveFails = 0;
+STATE.wsEqlistTotalFails = 0;
+STATE.lastEqListSnapshot = '';
+connectEqlistWebSocket();
+fetchEarthquakeHistory();
+} else if (src === 'wolfx-http') {
+/* 使用 HTTP GET 轮询 */
+STATE.wsEqlistFallback = true;
+STATE.lastEqListSnapshot = '';
+updateWsStatusIndicator();
+startEqlistHttpFallback();
+} else if (src === 'ceic') {
+/* 使用 CEIC 官方 API */
+STATE.lastEqListSnapshot = '';
+updateWsStatusIndicator();
+fetchCeicData();
+STATE.ceicRefreshTimer = setInterval(fetchCeicData, 5000);
+}
+}
+
+/* ====== 从 CEIC 官方 API 拉取地震数据 ====== */
+function fetchCeicData() {
+fetch(CONFIG.API_CEIC_DIRECT)
+.then(res => res.json())
+.then(data => {
+let list = [];
+if (Array.isArray(data)) list = data;
+else if (data.shuju) list = data.shuju;
+else if (data.data) list = data.data;
+else if (data.list) list = data.list;
+if (!list.length) return;
+/* 将 CEIC 格式转换为统一格式 */
+const converted = convertCeicData(list);
+if (converted.length) {
+STATE.earthquakes = converted.slice(0, 50);
+renderEarthquakeHistory(converted);
+updateDataCount();
+}
+})
+.catch(err => {
+console.warn('[CEIC] 请求失败:', err);
+});
+}
+/* ====== 地震模块初始化 ====== */
+function initEarthquakeModule() {
+  // 只连接地震历史相关的WS，不再单独连接 cenc_eew WSS
+  // cenc_eew 的 WSS 由 initEewModule 中的 connectEewCencWss 统一管理
+  // 避免双重连接导致重复处理
+
+  // 根据当前数据源设置来获取地震历史
+  fetchByDataSource();
+
+  // 保留定时刷新（仅用于 wolfx-wss 模式下的 HTTP 补充拉取）
+  setInterval(function() {
+    if (STATE.eqDataSource === 'wolfx-wss') {
+      fetchEarthquakeHistory();
+    }
+  }, CONFIG.REFRESH_EARTHQUAKE);
+}
+function connectEEWWebSocket() {
+  // 已弃用：cenc_eew WSS 由 initEewModule 统一管理，避免双重连接
+  // 保留函数签名以防其他位置调用
+}
+function connectWebSocket(url, label, onMsg) {
+try {
+const ws = new WebSocket(url);
+ws.onopen = () => { recordApiCall('WS/' + label, 'WS', 'ws_ok', 0, 0); sendHb(ws); };
+ws.onmessage = (ev) => {
+try {
+const data = JSON.parse(ev.data);
+recordApiCall('WS/' + label, 'MSG', 'ws_ok', new Blob([ev.data]).size, 0);
+onMsg(data, label);
+} catch (e) { }
+};
+ws.onerror = () => recordApiCall('WS/' + label, 'WS', 'error', 0, 0, '错误');
+ws.onclose = () => {
+recordApiCall('WS/' + label, 'WS', 'closed', 0, 0, '断开');
+setTimeout(() => connectWebSocket(url, label, onMsg), 5000);
+};
+function sendHb(w) {
+if (w.readyState === WebSocket.OPEN) w.send(JSON.stringify({ type: 'ping' }));
+setTimeout(() => { if (w && (w.readyState === WebSocket.OPEN || w.readyState === WebSocket.CONNECTING)) sendHb(w); }, 30000);
+}
+} catch (e) { recordApiCall('WS/' + label, 'WS', 'error', 0, 0, e.message); }
+}
+function connectEqlistWebSocket() {
+if (STATE.wsEqlistFallback) return;
+try {
+const ws = new WebSocket(CONFIG.WS_WOLFX_CENC_EQLIST);
+let wsOpened = false;
+ws.onopen = () => {
+wsOpened = true;
+STATE.wsEqlistConsecutiveFails = 0;
+updateWsStatusIndicator();
+recordApiCall('WS/cenc_eqlist', 'WS', 'ws_ok', 0, 0);
+sendHb(ws);
+};
+ws.onmessage = (ev) => {
+try {
+const data = JSON.parse(ev.data);
+recordApiCall('WS/cenc_eqlist', 'MSG', 'ws_ok', new Blob([ev.data]).size, 0);
+handleEQListMessage(data, 'cenc_eqlist');
+} catch (e) { }
+};
+ws.onerror = () => {
+recordApiCall('WS/cenc_eqlist', 'WS', 'error', 0, 0, '错误');
+};
+ws.onclose = () => {
+recordApiCall('WS/cenc_eqlist', 'WS', 'closed', 0, 0, '断开');
+STATE.wsEqlistConsecutiveFails++;
+STATE.wsEqlistTotalFails++;
+updateWsStatusIndicator();
+if (STATE.wsEqlistConsecutiveFails >= 3 || STATE.wsEqlistTotalFails >= 10) {
+console.warn(`[EQLIST WS] 连续失败${STATE.wsEqlistConsecutiveFails}次，累计失败${STATE.wsEqlistTotalFails}次，降级为HTTP GET轮询`);
+STATE.wsEqlistFallback = true;
+updateWsStatusIndicator();
+startEqlistHttpFallback();
+return;
+}
+setTimeout(() => connectEqlistWebSocket(), 5000);
+};
+function sendHb(w) {
+if (w.readyState === WebSocket.OPEN) w.send(JSON.stringify({ type: 'ping' }));
+setTimeout(() => { if (w && (w.readyState === WebSocket.OPEN || w.readyState === WebSocket.CONNECTING)) sendHb(w); }, 30000);
+}
+} catch (e) {
+recordApiCall('WS/cenc_eqlist', 'WS', 'error', 0, 0, e.message);
+STATE.wsEqlistConsecutiveFails++;
+STATE.wsEqlistTotalFails++;
+updateWsStatusIndicator();
+if (STATE.wsEqlistConsecutiveFails >= 3 || STATE.wsEqlistTotalFails >= 10) {
+STATE.wsEqlistFallback = true;
+updateWsStatusIndicator();
+startEqlistHttpFallback();
+} else {
+setTimeout(() => connectEqlistWebSocket(), 5000);
+}
+}
+}
+function startEqlistHttpFallback() {
+if (STATE.wsEqlistFallbackTimer) clearInterval(STATE.wsEqlistFallbackTimer);
+console.log('[EQLIST] 启动HTTP GET降级轮询，间隔3秒');
+fetchEqlistViaHttp();
+STATE.wsEqlistFallbackTimer = setInterval(fetchEqlistViaHttp, 3000);
+}
+function fetchEqlistViaHttp() {
+fetch(CONFIG.API_CEIC_HISTORY).then(res => res.json()).then(data => {
+let list = [];
+if (Array.isArray(data)) list = data;
+else if (data.data) list = data.data;
+else if (data.list) list = data.list;
+else list = Object.values(data).filter(v => typeof v === 'object' && v !== null && v.EventID);
+if (list.length) {
+STATE.earthquakes = list.slice(0, 50);
+renderEarthquakeHistory(list);
+updateDataCount();
+}
+}).catch(err => {
+console.warn('[EQLIST HTTP] 请求失败:', err);
+});
+}
+function handleEEWMessage(data) {
+  if (data.type === 'heartbeat') return;
+  const eq = {
+    id: data.EventID || (data.OriginTime + data.Latitude + data.Longitude),
+    time: data.OriginTime || data.ReportTime || new Date().toISOString(),
+    latitude: data.Latitude || data.Lat || 0,
+    longitude: data.Longitude || data.Lon || 0,
+    magnitude: data.Magnitude || data.Magunitude || 0,
+    depth: data.Depth || 0,
+    location: data.Hypocenter || data.HypoCenter || '未知',
+    _isAlert: true
+  };
+  STATE.eqAlert = eq;
+  addEarthquakeMarker(eq);
+  evaluateTsunamiRisk(eq);
+  if (!STATE.intensityMode) {
+    updateLatestEqPanel(eq, 'alert');
+  }
+  // 注意：不再在这里调用 processEewAlert，避免双重处理
+  // 地震预警模块的 connectEewCencWss 会独立处理
+}
+function handleEQListMessage(data) {
+if (data.type === 'heartbeat') return;
+let list = [];
+if (Array.isArray(data)) list = data;
+else if (data.data) list = data.data;
+else if (data.list) list = data.list;
+else list = Object.values(data).filter(v => typeof v === 'object' && v !== null && v.EventID);
+if (list.length) { STATE.earthquakes = list.slice(0, 50); renderEarthquakeHistory(list); updateDataCount(); }
+}
+function fetchEarthquakeHistory() {
+if (STATE.wsEqlistFallback) return;
+fetch(CONFIG.API_CEIC_HISTORY).then(res => res.json()).then(data => {
+let list = [];
+if (Array.isArray(data)) list = data;
+else if (data.data) list = data.data;
+else if (data.list) list = data.list;
+else list = Object.values(data).filter(v => typeof v === 'object' && v !== null && v.EventID);
+if (list.length) { STATE.earthquakes = list.slice(0, 50); renderEarthquakeHistory(list); updateDataCount(); }
+}).catch(() => { });
+}
+/* 【修改1&3】渲染地震历史到浮窗 - 烈度统一使用 getEqIntensity */
+function renderEarthquakeHistory(list) {
+    if (!list.length) {
+DOM.eqHistoryList.innerHTML = '<div style="text-align:center; color:#5a7a9a; font-size:14px; padding:20px 10px;"><i class="fas fa-hourglass-half" style="font-size:28px; margin-bottom:8px; display:block; color:#3a5a7a;"></i>暂无历史数据</div>';
+DOM.eqHistoryCount.textContent = '0';
+STATE.lastEqListSnapshot = '';
+return;
+}
+const snapshot = list.map(eq => {
+const id = eq.EventID || eq.id || (eq.OriginTime + eq.Latitude + eq.Longitude) || Math.random();
+const mag = formatMag(eq.Magnitude || eq.magnitude || eq.Magunitude);
+const time = eq.OriginTime || eq.ReportTime || eq.addtime || eq.time || '';
+return `${id}|${mag}|${time}`;
+}).join(';');
+if (snapshot === STATE.lastEqListSnapshot) return;
+  if (!STATE.firstEqLoad) { playSound('eq-history'); if (!STATE.eewAnimating && !STATE.eewReviewMode) switchPage('page-earthquake'); }
+STATE.lastEqListSnapshot = snapshot;
+DOM.eqHistoryCount.textContent = list.length;
+if (list.length > 0) {
+const latestEq = list[0];
+// 如果正在地震预警动画或地震回看模式中，暂存数据，不打断当前状态
+if (STATE.eewAnimating || STATE.eewReviewMode) {
+STATE._pendingLatestEq = latestEq;
+} else {
+STATE.latestEqData = latestEq;
+// 如果当前正在显示烈度图，自动切换到最新地震的烈度图
+if (STATE.intensityMode) {
+applyIntensityMap(latestEq);
+} else {
+updateLatestEqPanel(latestEq, 'latest');
+}
+}
+}
+let html = '';
+    list.slice(0, 20).forEach((eq, i) => {
+const id = eq.EventID || eq.id || (eq.OriginTime + eq.Latitude + eq.Longitude) || `eq_${i}`;
+const mag = formatMag(eq.Magnitude || eq.magnitude || eq.Magunitude);
+const loc = eq.Hypocenter || eq.HypoCenter || eq.location || eq.weizhi || '未知';
+const time = eq.OriginTime || eq.ReportTime || eq.addtime || eq.time || '';
+const depth = eq.Depth || eq.depth || eq.shendu || '?';
+/* 【修改3】统一使用公式计算烈度，与左上角和地图完全一致 */
+const intensity = getEqIntensity(eq);
+const color = getIntensityColor(intensity);
+const romanIntensity = intensityToRoman(intensity);
+const formattedTime = time ? dayjs(time).format('YYYY-MM-DD HH:mm:ss') : '----/--/-- --:--:--';
+const btnText = STATE.activeIntensityEqId === id ? '隐藏烈度' : '显示烈度';
+const btnClass = STATE.activeIntensityEqId === id ? 'intensity-btn-float hide-mode' : 'intensity-btn-float';
+const leftBorderColor = color;
+const leftBgColor = hexToRgba(color, 0.22);
+const rightBgColor = hexToRgba(color, 0.08);
+html += `
+<div class="eq-card" data-eq-id="${id}" data-eq-idx="${i}">
+<div class="eq-int-section" style="border: 2px solid ${leftBorderColor}; background: ${leftBgColor};">
+<div class="eq-int-value">${romanIntensity}</div>
+<div class="eq-int-label">烈度</div>
+</div>
+<div class="eq-info-section" style="background: ${rightBgColor};">
+<div class="eq-location" title="${loc}">${loc}</div>
+<div class="eq-meta-row">
+<i class="fas fa-clock"></i>
+<span class="eq-time-val">${formattedTime}</span>
+</div>
+<div class="eq-bottom-row">
+<span class="eq-mag-inline"><svg viewBox="0 0 24 24" width="11" height="11" style="vertical-align:-1px;flex-shrink:0;"><path d="M1 12 Q4 2 7 12 T13 12 T19 12 T25 12" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg> M${mag}</span>
+<span class="eq-depth-inline"><i class="fas fa-arrow-down"></i>${depth}km</span>
+</div>
+</div>
+<button class="${btnClass}" data-eq-id="${id}">${btnText}</button>
+</div>`;
+});
+DOM.eqHistoryList.innerHTML = html;
+updateAllIntensityButtons();
+document.querySelectorAll('#eqHistoryList .intensity-btn-float').forEach(btn => {
+btn.addEventListener('click', function(e) {
+e.stopPropagation();
+if (e.originalEvent) e.originalEvent.stopPropagation();
+const eqId = this.dataset.eqId;
+const card = this.closest('.eq-card');
+const idx = card ? card.dataset.eqIdx : null;
+const eq = idx !== null ? STATE.earthquakes[parseInt(idx)] : null;
+if (!eq) return;
+if (STATE.activeIntensityEqId === eqId) {
+clearIntensityMapSilent();
+} else {
+this.textContent = '加载中...';
+this.classList.add('loading');
+/* 【修改2】不再显示加载弹窗，直接开始计算 */
+applyIntensityMap(eq);
+}
+});
+});
+if (STATE.firstEqLoad && list.length > 0) {
+STATE.firstEqLoad = false;
+setTimeout(() => {
+const firstBtn = document.querySelector('#eqHistoryList .intensity-btn-float');
+if (firstBtn) firstBtn.click();
+}, 1200);
+}
+}
+function addEarthquakeMarker(eq) {
+if (!STATE.eqMarkersLayer) return;
+const lat = parseFloat(eq.latitude || eq.Latitude) || 0, lon = parseFloat(eq.longitude || eq.Longitude) || 0;
+if (!lat || !lon) return;
+const mag = formatMag(eq.magnitude || eq.Magnitude);
+const intensity = getEqIntensity(eq);
+const color = getIntensityColor(intensity);
+const size = Math.max(16, Math.min(36, (parseFloat(mag) || 3) * 5));
+const icon = L.divIcon({
+html: `<div style="background:${color};width:${size}px;height:${size}px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 18px ${color};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:${Math.max(10, size * 0.35)}px;">${mag}</div>`,
+iconSize: [size + 4, size + 4], iconAnchor: [(size + 4) / 2, (size + 4) / 2]
+});
+L.marker([lat, lon], { icon }).bindPopup(`<div style="font-size:14px;">M${mag} ${eq.location || ''}</div>`).addTo(STATE.eqMarkersLayer);
+}
+function evaluateTsunamiRisk(eq) {
+const mag = parseFloat(eq.magnitude) || 0;
+const lat = parseFloat(eq.latitude) || 0, lon = parseFloat(eq.longitude) || 0;
+if (mag >= 7.0 && ((lat > 18 && lat < 42 && lon > 105 && lon < 130) || (lat > 20 && lat < 26 && lon > 119 && lon < 123))) activateTsunamiAlertMode();
+}
+function activateTsunamiAlertMode() {
+if (STATE.tsunamiAlertMode) { clearTimeout(STATE.tsunamiModeTimeout); }
+else {
+STATE.tsunamiAlertMode = true;
+if (STATE.tsunamiRefreshTimer) clearInterval(STATE.tsunamiRefreshTimer);
+STATE.tsunamiRefreshTimer = setInterval(fetchTsunamiData, CONFIG.REFRESH_TSUNAMI_ALERT);
+DOM.tsunamiStatusBadge.textContent = '⚠️ 快速模式'; DOM.tsunamiStatusBadge.style.background = '#ff4444';
+}
+STATE.tsunamiModeTimeout = setTimeout(() => {
+STATE.tsunamiAlertMode = false;
+if (STATE.tsunamiRefreshTimer) clearInterval(STATE.tsunamiRefreshTimer);
+STATE.tsunamiRefreshTimer = setInterval(fetchTsunamiData, CONFIG.REFRESH_TSUNAMI_DEFAULT);
+DOM.tsunamiStatusBadge.textContent = '监测中'; DOM.tsunamiStatusBadge.style.background = '#2a3f5a';
+}, 10000);
+}
+function initTyphoonModule() {
+DOM.typhoonDetail.innerHTML = '暂无台风数据';
+DOM.typhoonCount.textContent = '0';
+setInterval(() => {
+DOM.typhoonDetail.innerHTML = '暂无台风数据';
+DOM.typhoonCount.textContent = '0';
+if (STATE.typhoonMarkersLayer) STATE.typhoonMarkersLayer.clearLayers();
+}, CONFIG.REFRESH_TYPHOON);
+}
+function initTsunamiModule() {
+fetchTsunamiData();
+STATE.tsunamiRefreshTimer = setInterval(fetchTsunamiData, CONFIG.REFRESH_TSUNAMI_DEFAULT);
+}
+function escWarnText(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function fetchTsunamiData() {
+if (!STATE.tsunamiKnownIds) STATE.tsunamiKnownIds = new Set();
+fetch(CONFIG.API_NMEFC_TSUNAMI).then(res => res.json()).then(data => {
+const list = (data && data.success === true && Array.isArray(data.obj)) ? data.obj : [];
+renderTsunamiWarnings(list);
+}).catch(() => { DOM.tsunamiAlert.innerHTML = '<span style="color:#8aa0b8;"><i class="fas fa-circle-info"></i> 海洋警报数据获取失败，将自动重试</span>'; });
+}
+/* 渲染海洋警报卡片，并检测新警报（新警报出现时自动跳转海啸页面） */
+function renderTsunamiWarnings(list) {
+let container = document.getElementById('tsunamiWarnList');
+if (!container) {
+container = document.createElement('div');
+container.id = 'tsunamiWarnList';
+const page = document.getElementById('page-tsunami');
+if (page) page.appendChild(container);
+}
+const levelColors = { '红色': '#ff2222', '橙色': '#ff8800', '黄色': '#ffcc00', '蓝色': '#2288ff' };
+if (!list.length) {
+DOM.tsunamiAlert.innerHTML = '✅ 当前无海啸威胁';
+if (container) container.innerHTML = '';
+} else {
+DOM.tsunamiAlert.innerHTML = '<span style="color:#ff2244;"><i class="fas fa-exclamation-triangle"></i> 当前有 ' + list.length + ' 条海洋警报生效</span>';
+let cards = '';
+list.forEach(function(w) {
+const color = levelColors[w.level] || '#8aa0b8';
+const logoHtml = w.logo ? '<img src="' + escWarnText(w.logo) + '" alt="" style="width:44px;height:44px;object-fit:contain;margin-right:12px;flex-shrink:0;" onerror="this.style.display=\'none\'">' : '';
+cards += '<div class="info-card" style="border-left:4px solid ' + color + ';margin-top:10px;"><div class="title"><span style="display:flex;align-items:center;">' + logoHtml + escWarnText(w.title || '海洋警报') + ' <span style="color:' + color + ';font-weight:700;margin-left:6px;">' + escWarnText(w.level || '') + '</span></span></div><div class="detail">' + escWarnText(w.subtitle || '') + (w.orgUnit ? '<div style="color:#8aa0b8;font-size:12px;margin-top:4px;">发布单位：' + escWarnText(w.orgUnit) + '</div>' : '') + '</div></div>';
+});
+if (container) container.innerHTML = cards;
+}
+const newOnes = list.filter(function(w) { return w.id && !STATE.tsunamiKnownIds.has(w.id); });
+list.forEach(function(w) { if (w.id) STATE.tsunamiKnownIds.add(w.id); });
+if (STATE.tsunamiFirstPoll) { STATE.tsunamiFirstPoll = false; }
+else if (newOnes.length) { switchPage('page-tsunami'); }
+}
+function initVolcanoModule() {
+setInterval(() => { DOM.volcanoAlert.innerHTML = '<div class="info-card"><div class="title">？</div><div class="detail">警戒级别：Ⅱ级</div></div>'; }, CONFIG.REFRESH_VOLCANO);
+}
+function initFireModule() {
+setInterval(() => { DOM.fireCount.textContent = '0'; DOM.fireDetail.innerHTML = '暂无火灾热点'; }, CONFIG.REFRESH_FIRE);
+}
+function initWeatherModule() {
+setInterval(() => { DOM.weatherAlert.innerHTML = '<div class="info-card"><div class="title">暴雨</div><div class="detail">未知</div></div>'; }, CONFIG.REFRESH_WEATHER);
+}
+function updateDataCount() { DOM.dataCount.textContent = STATE.earthquakes.length; }
+function updateHeaderTime() {
+    // 回看模式下，显示从发震时间开始流逝的模拟时间（橙色）
+    if (STATE.eewReviewMode && STATE.eewReviewEqTimeMs && STATE.eewReviewStartRealTime) {
+        // simElapsed = 从点击回看到现在经过了多少真实秒数
+        var simElapsed = Date.now() - STATE.eewReviewStartRealTime;
+        // 模拟时间 = 发震时间 + 回看启动后的流逝量
+        DOM.headerTime.textContent = dayjs(STATE.eewReviewEqTimeMs + simElapsed).format('YYYY-MM-DD HH:mm:ss');
+        return;
+    }
+    DOM.headerTime.textContent = dayjs().format('HH:mm:ss');
+}
+function getHomeIconHtml() {
+return `<svg viewBox="0 0 32 32" width="36" height="36" style="filter: drop-shadow(0 2px 6px rgba(0,255,136,0.6));">
+<path d="M16 3 L3 15 L7 15 L7 28 L13 28 L13 20 L19 20 L19 28 L25 28 L25 15 L29 15 Z"
+fill="#00ff88" stroke="#006633" stroke-width="1.5"/>
+<rect x="13" y="10" width="6" height="6" fill="#006633" rx="1"/>
+</svg>`;
+}
+function addHomeMarker(lat, lng) {
+if (STATE.homeMarker) {
+STATE.map.removeLayer(STATE.homeMarker);
+STATE.homeMarker = null;
+}
+const homeIcon = L.divIcon({
+html: getHomeIconHtml(),
+iconSize: [36, 36],
+iconAnchor: [18, 36],
+className: ''
+});
+STATE.homeMarker = L.marker([lat, lng], {
+icon: homeIcon,
+zIndexOffset: 500
+}).bindTooltip('我的家', { permanent: false, className: 'custom-tooltip' })
+.bindPopup(`<div style="font-size:14px;color:#e0e6f0;"><b style="color:#00ff88;">🏠 我的家</b><br>纬度: ${lat.toFixed(4)}<br>经度: ${lng.toFixed(4)}</div>`)
+.addTo(STATE.map);
+STATE.homeLat = lat;
+STATE.homeLng = lng;
+try {
+localStorage.setItem('homeLat', String(lat));
+localStorage.setItem('homeLng', String(lng));
+} catch(e) {}
+}
+function removeHomeMarker() {
+if (STATE.homeMarker) {
+STATE.map.removeLayer(STATE.homeMarker);
+STATE.homeMarker = null;
+}
+STATE.homeLat = null;
+STATE.homeLng = null;
+try {
+localStorage.removeItem('homeLat');
+localStorage.removeItem('homeLng');
+} catch(e) {}
+}
+function loadHomePosition() {
+try {
+const lat = parseFloat(localStorage.getItem('homeLat'));
+const lng = parseFloat(localStorage.getItem('homeLng'));
+if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+addHomeMarker(lat, lng);
+}
+} catch(e) {}
+}
+function initHomeSetting() {
+const btnConfirm = document.getElementById('btnConfirmHome');
+const btnCancel = document.getElementById('btnCancelHome');
+const btnClear = document.getElementById('btnClearHome');
+const inputLat = document.getElementById('homeLat');
+const inputLng = document.getElementById('homeLng');
+// 切换到"所在地"页签时回填已保存的坐标
+function fillHomeInputs() {
+if (STATE.homeLat !== null && STATE.homeLng !== null) {
+inputLat.value = STATE.homeLat;
+inputLng.value = STATE.homeLng;
+} else {
+inputLat.value = '';
+inputLng.value = '';
+}
+}
+window._fillHomeInputs = fillHomeInputs;
+btnCancel.addEventListener('click', function() {
+closeSettingsDialog();
+});
+btnConfirm.addEventListener('click', function() {
+const lat = parseFloat(inputLat.value);
+const lng = parseFloat(inputLng.value);
+if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+alert('请输入有效的经纬度！\n纬度范围：-90 ~ 90\n经度范围：-180 ~ 180');
+return;
+}
+addHomeMarker(lat, lng);
+closeSettingsDialog();
+STATE.map.setView([lat, lng], 10, { animate: true });
+});
+btnClear.addEventListener('click', function() {
+removeHomeMarker();
+closeSettingsDialog();
+});
+}
+/* ====== 音频系统 ====== */
+function playSound(key) {
+  if (!STATE.audioEnabled) return;
+  const file = STATE.audioFiles[key];
+  if (!file) return;
+  try {
+    const audio = new Audio(CONFIG.SOUND_DIR + file);
+    audio.volume = 0.7;
+    audio.play().catch(() => {});
+  } catch(e) {}
+}
+
+function initAudioSetting() {
+  const list = document.getElementById('audioSettingsList');
+  if (!list) return;
+
+  function renderAudioList() {
+    const items = [
+      { key: 'eq-happened', name: '地震预警生效', file: STATE.audioFiles['eq-happened'] },
+      { key: 'eq-update', name: '地震预警报文更新', file: STATE.audioFiles['eq-update'] },
+      { key: 'strong-eq', name: '强震（≥7级）', file: STATE.audioFiles['strong-eq'] },
+      { key: 'eew-weak', name: '地震预警（弱，3~6级烈度）', file: STATE.audioFiles['eew-weak'] },
+      { key: 'eew-strong', name: '地震预警（强，≥7级烈度）', file: STATE.audioFiles['eew-strong'] },
+      { key: 'eq-history', name: '地震历史更新', file: STATE.audioFiles['eq-history'] },
+    ];
+    let html = '';
+    items.forEach(item => {
+      html += `<div class="audio-item">
+        <span class="audio-name">${item.name}</span>
+        <span class="audio-file">${item.file}</span>
+        <button class="audio-test-btn" data-key="${item.key}">▶ 测试</button>
+      </div>`;
+    });
+    list.innerHTML = html;
+    list.querySelectorAll('.audio-test-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        playSound(this.dataset.key);
+      });
+    });
+  }
+
+  renderAudioList();
+}
+
+/* ====== 地震预警去重逻辑 ====== */
+function makeEewKey(eq) {
+    // 统一使用"精确时间 + 经纬度"做时空去重，跨API通用
+    // 【修复】1. 正则中加入 '/' 和 '.' 以覆盖所有日期格式
+    //        2. 不再截断到12字符，改为取到秒级精度（14字符），
+    //           避免同一分钟内的不同地震被误判为重复
+    const raw = String(eq.time || eq.OriginTime || '');
+    // 优先用 _rawStartAt（毫秒时间戳），确保跨API一致性
+    let t;
+    if (eq._rawStartAt) {
+        t = String(eq._rawStartAt);
+    } else {
+        t = raw.replace(/[\s\-T:\/\.]/g, '').substring(0, 14);
+    }
+    const lat = parseFloat(eq.latitude || eq.Latitude || 0).toFixed(1);
+    const lon = parseFloat(eq.longitude || eq.Longitude || 0).toFixed(1);
+    return `${t}_${lat}_${lon}`;
+}
+function isDuplicateEew(eq) {
+  const key = makeEewKey(eq);
+  if (STATE.eewSeenKeys.has(key)) return true;
+  STATE.eewSeenKeys.add(key);
+  if (STATE.eewSeenKeys.size > 200) {
+    const arr = Array.from(STATE.eewSeenKeys);
+    STATE.eewSeenKeys = new Set(arr.slice(-100));
+  }
+  return false;
+}
+
+/* ====== 地震预警数据处理 ====== */
+function normalizeEewData(data, source) {
+  let eq = null;
+if (source === 'cenc-wss' || source === 'cenc-http') {
+eq = {
+id: data.EventID || data.event_id || data.ID || data.id || ((data.OriginTime || '') + '_' + (data.Latitude || '') + '_' + (data.Longitude || '')),
+time: data.OriginTime || data.ReportTime || data.origin_time || data.time || new Date().toISOString(),
+latitude: parseFloat(data.Latitude || data.Lat || data.latitude || data.lat) || 0,
+longitude: parseFloat(data.Longitude || data.Lon || data.longitude || data.lon || data.lng) || 0,
+magnitude: parseFloat(data.Magnitude || data.Magunitude || data.magnitude || data.mag || data.M) || 0,
+depth: parseFloat(data.Depth || data.depth || data.shendu) || 10,
+location: data.HypoCenter || data.Hypocenter || data.hypocenter || data.location || data.place || data.weizhi || data.diqu || '未知',
+source: source,
+_isAlert: true,
+_eewTime: Date.now(),
+_reportNum: data.ReportNum || data.report_num || data.ReportNumber || data.reportNumber || data.serial || data.Serial || null
+};
+}
+else if (source === 'chinaeew') {
+    // ChinaEWW API 实际字段：eventId, epicenter, startAt(毫秒时间戳), latitude, longitude, magnitude, depth
+    let timeStr = '';
+    if (data.startAt) {
+      // startAt 是毫秒时间戳，转为北京时间字符串 YYYY-MM-DD HH:mm:ss
+      const d = new Date(Number(data.startAt));
+      if (!isNaN(d.getTime())) {
+        const pad = n => String(n).padStart(2, '0');
+        timeStr = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+      }
+    }
+    if (!timeStr) {
+      timeStr = data.origin_time || data.time || data.OriginTime || data.report_time || new Date().toISOString();
+    }
+    eq = {
+      id: String(data.eventId || data.event_id || data.id || data.ID || ''),
+      time: timeStr,
+      latitude: parseFloat(data.latitude || data.Latitude || data.lat) || 0,
+      longitude: parseFloat(data.longitude || data.Longitude || data.lon || data.lng) || 0,
+      magnitude: parseFloat(data.magnitude || data.Magnitude || data.mag || data.M) || 0,
+      depth: parseFloat(data.depth || data.Depth || data.shendu) || 10,
+      location: data.epicenter || data.location || data.place || data.Hypocenter || data.hypocenter || data.diqu || '未知',
+      source: source,
+      _isAlert: true,
+      _eewTime: Date.now(),
+_rawStartAt: data.startAt || null,
+_rawUpdateAt: data.updateAt || null,
+_reportNum: data.updates || data.updateNum || data.serial || data.Serial || null,
+};
+  }
+  return eq;
+}
+/* ====== CENC报文快照生成：提取关键字段用于差异比对 ====== */
+function makeCencSnapshot(eq) {
+    return [
+        parseFloat(eq.latitude).toFixed(3),
+        parseFloat(eq.longitude).toFixed(3),
+        parseFloat(eq.magnitude).toFixed(1),
+        parseFloat(eq.depth).toFixed(1),
+        String(eq.time || ''),
+        String(eq.location || '')
+    ].join('|');
+}
+
+/* ====== 报次判定：统一处理 Chinaeew 和 Cenceew 的报次识别 ====== */
+function resolveReportNum(eq) {
+    // 确定事件唯一标识（用于跨API追踪同一地震）
+    const eventKey = makeEewKey(eq);
+
+    let tracker = STATE.eewReportTracker[eventKey];
+    if (!tracker) {
+        tracker = {
+            reportNum: 0,
+            magnitude: -1,
+            intensity: -1,
+            cencSnapshot: null,
+            lastSoundTime: 0,
+            strongEverPlayedAbove: 0  // 记录曾触发强震音效的最高震级
+        };
+        STATE.eewReportTracker[eventKey] = tracker;
+    }
+
+    let newReportNum = tracker.reportNum;
+    let isUpdate = false;
+
+    if (eq.source === 'chinaeew') {
+        // Chinaeew：直接使用 API 返回的 updates 字段作为报次号
+        const apiReportNum = parseInt(eq._reportNum) || 1;
+        if (apiReportNum > tracker.reportNum) {
+            newReportNum = apiReportNum;
+            isUpdate = tracker.reportNum > 0; // 第1报不算更新
+        } else if (apiReportNum === tracker.reportNum) {
+            // 同一报次，与CENC混合推送时可能发生，忽略
+            return { eventKey, tracker, reportNum: tracker.reportNum, isUpdate: false, isNew: false };
+        }
+    } else {
+        // Cenceew (cenc-wss / cenc-http)：无 update 字段，通过报文快照差异判断
+        const snapshot = makeCencSnapshot(eq);
+        if (tracker.cencSnapshot === null) {
+            // 第一次收到该事件的CENC报文 → 第1报
+            newReportNum = Math.max(tracker.reportNum, 1);
+            tracker.cencSnapshot = snapshot;
+            // 如果 tracker.reportNum 已经是0，说明这是全新事件
+            isUpdate = false;
+        } else if (snapshot !== tracker.cencSnapshot) {
+            // 报文内容发生变化 → 报次+1
+            newReportNum = tracker.reportNum + 1;
+            isUpdate = true;
+            tracker.cencSnapshot = snapshot;
+        } else {
+            // 报文完全相同 → 重复，忽略
+            return { eventKey, tracker, reportNum: tracker.reportNum, isUpdate: false, isNew: false };
+        }
+    }
+
+    // 同时更新CENC快照（即使来源是chinaeew也同步，保证混合更新时一致）
+    if (eq.source === 'chinaeew' && tracker.cencSnapshot !== undefined) {
+        const snapshot = makeCencSnapshot(eq);
+        tracker.cencSnapshot = snapshot;
+    }
+
+    const isNew = tracker.reportNum === 0; // 全新事件（第1报）
+    tracker.reportNum = newReportNum;
+
+    // 将解析出的报次号写入eq对象，供面板显示
+    eq._reportNum = newReportNum;
+
+    return { eventKey, tracker, reportNum: newReportNum, isUpdate, isNew };
+}
+
+function processEewAlert(eq) {
+    if (!eq || !eq.latitude || !eq.longitude) return;
+    // 经纬度为0视为无效
+    if (eq.latitude === 0 && eq.longitude === 0) return;
+
+    let eqTime;
+    if (eq._rawStartAt) {
+        eqTime = Number(eq._rawStartAt);
+    } else {
+        eqTime = new Date(eq.time).getTime();
+        if (isNaN(eqTime) && /^\d{10,13}$/.test(String(eq.time))) {
+            eqTime = Number(eq.time);
+        }
+        if (isNaN(eqTime) && typeof eq.time === 'string' && eq.time.includes(' ')) {
+            eqTime = new Date(eq.time.replace(' ', 'T')).getTime();
+        }
+    }
+    const now = Date.now();
+    if (isNaN(eqTime)) {
+        console.log('[EEW] 忽略时间无效的地震:', eq.location, eq.time);
+        return;
+    }
+
+    // ====== 报次判定（双线并行统一处理） ======
+    const result = resolveReportNum(eq);
+    const { eventKey, tracker, reportNum, isUpdate, isNew } = result;
+
+    // 如果 resolveReportNum 判定为重复（isNew=false 且 isUpdate=false），直接忽略
+    if (!isNew && !isUpdate) {
+        console.log('[EEW] 重复报文已忽略:', eq.location, eq.source, '第' + reportNum + '报');
+        return;
+    }
+
+    console.log('[EEW] 处理:', eq.location, eq.source,
+        isNew ? '★新事件 第1报' : '↻更新 第' + reportNum + '报',
+        'M' + eq.magnitude);
+
+    // ====== 记录上一次震级和烈度（用于音效判断） ======
+    const prevMagnitude = tracker.magnitude;
+    const prevIntensity = tracker.intensity;
+    const curMagnitude = parseFloat(eq.magnitude) || 0;
+    const curIntensity = getEqIntensity(eq);
+
+    // 更新tracker中的震级和烈度
+    tracker.magnitude = curMagnitude;
+    tracker.intensity = curIntensity;
+
+    // ✅ 无论是否满足地图显示条件，都加入预警列表
+    // 检查列表中是否已存在同一事件，存在则更新而非重复添加
+    const existingIdx = STATE.eewAlerts.findIndex(a => makeEewKey(a) === eventKey);
+    if (existingIdx >= 0) {
+        STATE.eewAlerts[existingIdx] = eq; // 更新为最新报文
+    } else {
+        STATE.eewAlerts.unshift(eq);
+    }
+    if (STATE.eewAlerts.length > 50) STATE.eewAlerts = STATE.eewAlerts.slice(0, 50);
+    STATE.eewCurrentAlert = eq;
+
+    // 【回看模式保护】如果用户正在回看，不打断当前动画
+    if (STATE.eewReviewMode && STATE.eewAnimating) {
+        renderEewList();
+        return;
+    }
+
+    // 判断是否满足显示EEW地图的条件
+    const shouldShow = shouldShowEewMap(eq);
+    if (shouldShow) {
+        // ====== 音效逻辑（核心改动） ======
+        if (isNew) {
+            // ---- 第1报：新地震发生 ----
+            playSound('eq-happened');
+            switchPage('page-eew');
+            tracker.lastSoundTime = now;
+
+            // 强震音效：震级≥7 OR 烈度≥7
+            if (curMagnitude >= 7 || curIntensity >= 7) {
+                setTimeout(() => playSound('strong-eq'), 500);
+                // 记录曾触发强震音效的最高震级
+                tracker.strongEverPlayedAbove = Math.max(tracker.strongEverPlayedAbove, curMagnitude);
+            }
+
+            // 家附近的预警音效
+            if (STATE.homeLat !== null && STATE.homeLng !== null) {
+                const dist = calcDistance(eq.latitude, eq.longitude, STATE.homeLat, STATE.homeLng);
+                const homeIntensity = calcIntensityByDistance(curIntensity, dist, eq.depth);
+                if (homeIntensity >= 7) {
+                    setTimeout(() => playSound('eew-strong'), 1000);
+                } else if (homeIntensity >= 3) {
+                    setTimeout(() => playSound('eew-weak'), 1000);
+                }
+            }
+        } else if (isUpdate) {
+            // ---- 更新报：第2报、第3报... ----
+            // ✅ 播放"地震更新"音效，绝不播放"地震发生"
+            playSound('eq-update');
+            tracker.lastSoundTime = now;
+
+            // 强震音效判断（震级或烈度变化时）：
+            // 规则：
+            //   1. 震级从 <7 升到 ≥7 → 播放强震
+            //   2. 震级从 ≥7 升到更高(如7→8) → 不播放（避免重复轰炸）
+            //   3. 震级从 ≥7 降到 <7 后又升回 ≥7 → 播放强震（因为中间降过）
+            //   4. 烈度上升跨越7度阈值 → 同理播放
+
+            const prevMagAbove7 = prevMagnitude >= 7;
+            const curMagAbove7 = curMagnitude >= 7;
+            const prevIntAbove7 = prevIntensity >= 7;
+            const curIntAbove7 = curIntensity >= 7;
+
+            // 判断是否需要播放强震音效
+            let shouldPlayStrong = false;
+
+            // 震级跨越7级阈值（从下方穿越）
+            if (!prevMagAbove7 && curMagAbove7) {
+                shouldPlayStrong = true;
+            }
+            // 烈度跨越7度阈值（从下方穿越）
+            if (!prevIntAbove7 && curIntAbove7) {
+                shouldPlayStrong = true;
+            }
+
+            // 但如果当前震级 <= 曾触发过强震音效的最高震级，且没有先从上方降下来过，则不播放
+            // 具体：如果 strongEverPlayedAbove >= curMagnitude 且 prevMagnitude >= 7（即没有降下来过），抑制
+            if (shouldPlayStrong && tracker.strongEverPlayedAbove >= curMagnitude && prevMagAbove7) {
+                shouldPlayStrong = false;
+            }
+
+            if (shouldPlayStrong) {
+                setTimeout(() => playSound('strong-eq'), 500);
+                tracker.strongEverPlayedAbove = Math.max(tracker.strongEverPlayedAbove, curMagnitude);
+            }
+
+            // 家附近的预警音效（更新后烈度可能变化）
+            if (STATE.homeLat !== null && STATE.homeLng !== null) {
+                const dist = calcDistance(eq.latitude, eq.longitude, STATE.homeLat, STATE.homeLng);
+                const homeIntensity = calcIntensityByDistance(curIntensity, dist, eq.depth);
+                const prevHomeIntensity = calcIntensityByDistance(prevIntensity, dist, eq.depth);
+                // 仅在预计烈度发生变化时播放
+                if (Math.round(homeIntensity) !== Math.round(prevHomeIntensity)) {
+                    if (homeIntensity >= 7) {
+                        setTimeout(() => playSound('eew-strong'), 1000);
+                    } else if (homeIntensity >= 3) {
+                        setTimeout(() => playSound('eew-weak'), 1000);
+                    }
+                }
+            }
+        }
+
+        // 启动/重启地图动画
+        startEewMapAnimation(eq);
+        // 更新左上角面板为预警模式
+        updateLatestEqPanelEew(eq);
+    }
+
+    // ✅ 始终渲染预警列表
+    renderEewList();
+}
+/* 地震预警模式 - 更新左上角面板 */
+function updateLatestEqPanelEew(eq) {
+  const mag = formatMag(eq.magnitude || eq.Magnitude);
+  const loc = eq.location || eq.Hypocenter || '未知';
+  const time = eq.time || eq.OriginTime || '';
+  const depth = eq.depth || eq.Depth || '?';
+  const intensity = getEqIntensity(eq);
+  const color = getIntensityColor(intensity);
+  const romanI = intensityToRoman(intensity);
+const formattedDate = time ? dayjs(time).format('YYYY-MM-DD') : '----/--/--';
+const formattedClock = time ? dayjs(time).format('HH:mm:ss') : '--:--:--';
+  let elapsed;
+  if (eq._rawStartAt) {
+    elapsed = Math.round((Date.now() - Number(eq._rawStartAt)) / 1000);
+  } else {
+    let tMs = new Date(time).getTime();
+    if (isNaN(tMs) && typeof time === 'string' && time.includes(' ')) {
+      tMs = new Date(time.replace(' ', 'T')).getTime();
+    }
+    elapsed = Math.round((Date.now() - (tMs || Date.now())) / 1000);
+  }
+DOM.lepBody.innerHTML = `
+<div class="lep-main-row">
+<div class="lep-intensity-wrapper">
+<div class="lep-intensity-bg" style="background:${color};"></div>
+<span class="lep-intensity-big" style="color:${color};">${romanI}</span>
+<span class="lep-intensity-unit" style="color:${color};">烈度</span>
+</div>
+<div class="lep-side-info">
+<div class="lep-loc-inline">${loc}</div>
+<div class="lep-time-inline"><span class="lep-time-val"><span>${formattedDate}</span><span>${formattedClock}</span></span></div>
+<div class="lep-mag-depth-row" style="margin-top:2px;">
+<span class="lep-mag-small" style="font-size:20px;">M${mag}</span>
+<span class="lep-depth-small"><span class="lep-depth-label">深度</span><span class="lep-depth-value">${depth}km</span></span>
+</div>
+</div>
+</div>
+`;
+// 预警/回看模式：显示"中国地震预警网"作为标题
+if (DOM.lepTitle) {
+DOM.lepTitle.textContent = '中国地震预警网';
+}
+// 显示报次
+if (DOM.lepReport) {
+const reportNum = eq._reportNum || eq._rawUpdateAt ? 1 : null;
+let num = null;
+if (eq._reportNum !== null && eq._reportNum !== undefined) {
+num = parseInt(eq._reportNum);
+} else if (eq._rawUpdateAt && eq._rawStartAt) {
+// 如果没有明确的报次字段，根据更新次数推算
+num = 1;
+}
+if (num && !isNaN(num)) {
+DOM.lepReport.textContent = '第' + num + '报';
+DOM.lepReport.style.display = 'inline-block';
+} else {
+DOM.lepReport.style.display = 'none';
+}
+}
+DOM.latestEqPanel.classList.add('eew-active', 'eew-pulsing');
+DOM.latestEqPanel.classList.remove('panel-highlight');
+}
+/* 退出预警模式 - 恢复左上角面板 */
+function resetLatestEqPanelFromEew() {
+DOM.latestEqPanel.classList.remove('eew-active', 'eew-pulsing');
+// 恢复普通模式标题
+if (DOM.lepTitle) {
+DOM.lepTitle.textContent = '中国地震台网';
+}
+if (DOM.lepReport) {
+DOM.lepReport.style.display = 'none';
+}
+if (STATE.latestEqData) {
+updateLatestEqPanel(STATE.latestEqData, 'latest');
+} else if (STATE.eqAlert) {
+updateLatestEqPanel(STATE.eqAlert, 'alert');
+} else {
+resetLatestEqPanel();
+}
+}
+/* ====== 地震预警地图显示条件 ====== */
+function shouldShowEewMap(eq) {
+  const intensity = getEqIntensity(eq);
+  let eqTime;
+  if (eq._rawStartAt) {
+    eqTime = Number(eq._rawStartAt);
+  } else {
+    eqTime = new Date(eq.time).getTime();
+    if (isNaN(eqTime) && typeof eq.time === 'string' && eq.time.includes(' ')) {
+      eqTime = new Date(eq.time.replace(' ', 'T')).getTime();
+    }
+  }
+  if (isNaN(eqTime)) return false;
+  const now = Date.now();
+  const elapsed = (now - eqTime) / 1000;
+  if (elapsed < 0) return false;
+if (intensity <= 4 && elapsed < 90) return true;
+if (intensity > 4 && intensity < 7 && elapsed < 120) return true;
+if (intensity >= 7 && elapsed < 240) return true;
+  return false;
+}
+function getEewFadeConfig(eq) {
+    const intensity = getEqIntensity(eq);
+    if (intensity <= 4) return { maxTime: 90, fadeStart: 60 };
+    if (intensity < 7) return { maxTime: 120, fadeStart: 75 };
+    // 【新增】烈度≥9：在≥7的基础上多持续60秒再开始淡出
+    if (intensity >= 9) return { maxTime: 300, fadeStart: 225 };
+    return { maxTime: 240, fadeStart: 165 };
+}
+/* ====== 地震预警地图动画 ====== */
+function startEewMapAnimation(eq) {
+    if (STATE.eewAnimFrame) cancelAnimationFrame(STATE.eewAnimFrame);
+    // 先停止动画状态，避免竞态
+    STATE.eewAnimating = false;
+    // 确保 eewLayer 存在且已添加到地图
+    if (STATE.eewLayer) {
+        STATE.eewLayer.clearLayers();
+        // 确保 layer 仍在地图上（可能之前被 removeLayer）
+        if (!STATE.map.hasLayer(STATE.eewLayer)) {
+            STATE.eewLayer.addTo(STATE.map);
+        }
+    } else {
+        STATE.eewLayer = L.layerGroup().addTo(STATE.map);
+    }
+    STATE.eewAnimating = true;
+  // 更新左上角面板为预警模式
+  updateLatestEqPanelEew(eq);
+  STATE.eewCurrentAlert = eq;
+
+  const eqLat = eq.latitude;
+  const eqLon = eq.longitude;
+  const depth = parseFloat(eq.depth) || 10;
+  const I0 = getEqIntensity(eq);
+  const intColor = getIntensityColor(I0);
+  const config = getEewFadeConfig(eq);
+  let startTime;
+  if (eq._rawStartAt) {
+    startTime = Number(eq._rawStartAt);
+  } else {
+    startTime = new Date(eq.time).getTime();
+    if (isNaN(startTime) && typeof eq.time === 'string' && eq.time.includes(' ')) {
+      startTime = new Date(eq.time.replace(' ', 'T')).getTime();
+    }
+  }
+
+  // 闪烁震中图标
+  const flashIcon = L.divIcon({
+    html: `<div class="eew-flash-icon"><svg viewBox="0 0 28 28" width="38" height="38">
+      <line x1="4" y1="4" x2="24" y2="24" stroke="#ffffaa" stroke-width="7.5" stroke-linecap="round"/>
+      <line x1="24" y1="4" x2="4" y2="24" stroke="#ffffaa" stroke-width="7.5" stroke-linecap="round"/>
+      <line x1="4" y1="4" x2="24" y2="24" stroke="#ff0000" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="24" y1="4" x2="4" y2="24" stroke="#ff0000" stroke-width="3.5" stroke-linecap="round"/>
+    </svg></div>`,
+    iconSize: [38, 38], iconAnchor: [19, 19], className: ''
+  });
+  L.marker([eqLat, eqLon], { icon: flashIcon, zIndexOffset: 2000 })
+    .bindTooltip('震中（预警）', { permanent: false, className: 'custom-tooltip' })
+    .addTo(STATE.eewLayer);
+
+// 【修复】使用独立的原生 Canvas，避免 Leaflet 渲染器自动清除画布
+if (STATE.eewCanvasRenderer) {
+    if (STATE.eewCanvasRenderer._container) STATE.eewCanvasRenderer._container.remove();
+    STATE.eewCanvasRenderer = null;
+}
+// 移除旧独立canvas（如果有）
+var _oldIndCanvas = document.getElementById('eewIndependentCanvas');
+if (_oldIndCanvas) _oldIndCanvas.remove();
+// 创建独立 Canvas 覆盖在地图上
+const _canvasEl = document.createElement('canvas');
+_canvasEl.id = 'eewIndependentCanvas';
+_canvasEl.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;z-index:800;';
+var _mapContainer = STATE.map.getContainer();
+_mapContainer.appendChild(_canvasEl);
+_canvasEl.width = _mapContainer.clientWidth;
+_canvasEl.height = _mapContainer.clientHeight;
+const _ctx = _canvasEl.getContext('2d');
+// 预计算震中在 Canvas 坐标系中的像素位置
+function _getEpicenterPixel() {
+    // 独立canvas与#map容器完全对齐，直接用容器坐标
+    var pt = STATE.map.latLngToContainerPoint([eqLat, eqLon]);
+    return { x: pt.x, y: pt.y };
+}
+// 预计算米→像素比率（在震中纬度处）
+function _getMetersToPixels() {
+    const zoom = STATE.map.getZoom();
+    const latRad = eqLat * Math.PI / 180;
+    // Web Mercator 解析公式：像素/米 = (256 × 2^zoom) / (2πR × cos(纬度))
+    // 替代原有采样法，消除不同缩放级别下Mercator非线性导致的半径偏差
+    const earthCircumference = 2 * Math.PI * 6378137;
+    const metersPerPixel = earthCircumference * Math.cos(latRad) / (256 * Math.pow(2, zoom));
+    return 1 / metersPerPixel;
+}
+let _epicPx = _getEpicenterPixel();
+let _mToPx = _getMetersToPixels();
+
+// 监听地图移动/缩放，更新坐标转换参数
+function _onMapMove() {
+    _epicPx = _getEpicenterPixel();
+    _mToPx = _getMetersToPixels();
+}
+function _onMapResize() {
+var _mc = STATE.map.getContainer();
+var _w = _mc.clientWidth;
+var _h = _mc.clientHeight;
+if (_w > 0 && _h > 0) {
+_canvasEl.width = _w;
+_canvasEl.height = _h;
+_canvasEl.style.width = _w + 'px';
+_canvasEl.style.height = _h + 'px';
+}
+}
+_onMapResize();
+function _syncCanvasSize() {
+var _mc = STATE.map.getContainer();
+var _w = _mc.clientWidth;
+var _h = _mc.clientHeight;
+if (_w > 0 && _h > 0 && (_canvasEl.width !== _w || _canvasEl.height !== _h)) {
+_canvasEl.width = _w;
+_canvasEl.height = _h;
+_canvasEl.style.width = _w + 'px';
+_canvasEl.style.height = _h + 'px';
+}
+}
+// 【修复】使用命名函数并存入STATE，确保清理时能精确移除，不伤害全局监听器
+STATE._eewMapMoveHandler = function() {
+    _syncCanvasSize();
+    _epicPx = _getEpicenterPixel();
+    _mToPx = _getMetersToPixels();
+};
+STATE._eewMapResizeHandler = _onMapResize;
+STATE.map.on('move zoom zoomend', STATE._eewMapMoveHandler);
+STATE.map.on('resize', STATE._eewMapResizeHandler);
+// 解析 intColor 为 RGB 分量（避免每帧 hexToRgba）
+const _sR = parseInt(intColor.slice(1, 3), 16);
+const _sG = parseInt(intColor.slice(3, 5), 16);
+const _sB = parseInt(intColor.slice(5, 7), 16);
+
+// S波到达地表进度环 (SVG)
+var progressRing = L.marker([eqLat, eqLon], {
+    icon: L.divIcon({
+        html: `<svg width="60" height="60" viewBox="0 0 60 60" id="sWaveProgressSvg">
+            <circle cx="30" cy="30" r="25" fill="none" stroke="rgba(100,100,100,0.3)" stroke-width="4"/>
+            <circle cx="30" cy="30" r="25" fill="none" stroke="${intColor}" stroke-width="4"
+                stroke-dasharray="157" stroke-dashoffset="157" stroke-linecap="round"
+                transform="rotate(-90 30 30)" id="sWaveProgressArc"/>
+        </svg>`,
+        iconSize: [60, 60], iconAnchor: [30, 30], className: ''
+    }),
+    zIndexOffset: 1500
+}).addTo(STATE.eewLayer);
+
+// 【修复-烈度图】渲染烈度分布图（仅渲染行政区划填色，不添加震中X图标）
+applyIntensityMapNoMarker(eq);
+if (STATE.intensityOverlayLayer) STATE.intensityOverlayLayer.clearLayers();
+
+const timeToSurface = depth / CONFIG.S_WAVE_SPEED;
+
+let _eewFrameCount = 0;
+let _cachedArcEl = document.getElementById('sWaveProgressArc');
+
+function animateEew() {
+    const now = Date.now();
+    const elapsed = (now - startTime) / 1000;
+if (elapsed > config.maxTime || !STATE.eewAnimating) {
+STATE.eewAnimating = false;
+// 【修复】使用精确函数引用移除，不影响initMap注册的全局监听器
+if (STATE._eewMapMoveHandler) {
+    STATE.map.off('move zoom zoomend', STATE._eewMapMoveHandler);
+    STATE._eewMapMoveHandler = null;
+}
+if (STATE._eewMapResizeHandler) {
+    STATE.map.off('resize', STATE._eewMapResizeHandler);
+    STATE._eewMapResizeHandler = null;
+}
+if (_canvasEl && _canvasEl.parentNode) _canvasEl.remove();
+STATE.eewCanvasRenderer = null;
+// 【修复】波完全消失后隐藏倒计时面板
+DOM.eewCountdownPanel.style.display = 'none';
+resetLatestEqPanelFromEew();
+// 地震波消失后60秒自动清除烈度分布图及残留的闪烁震中图标
+if (STATE._intensityAutoClearTimer) clearTimeout(STATE._intensityAutoClearTimer);
+STATE._intensityAutoClearTimer = setTimeout(function() {
+if (!STATE.eewAnimating) {
+clearIntensityMapSilent();
+// 清除eewLayer中可能残留的闪烁震中X图标
+if (STATE.eewLayer) STATE.eewLayer.clearLayers();
+// 烈度图消失后，消费暂存的地震数据
+consumePendingLatestEq();
+}
+STATE._intensityAutoClearTimer = null;
+}, 60000);
+return;
+}
+    let opacity = 1;
+    if (elapsed > config.fadeStart) {
+        opacity = 1 - (elapsed - config.fadeStart) / (config.maxTime - config.fadeStart);
+        opacity = Math.max(0, opacity);
+    }
+
+// 【修复】每帧检查Canvas尺寸，防止缩放过程中缓冲区与容器不一致
+var _mcCheck = STATE.map.getContainer();
+if (_canvasEl.width !== _mcCheck.clientWidth || _canvasEl.height !== _mcCheck.clientHeight) {
+_canvasEl.width = _mcCheck.clientWidth;
+_canvasEl.height = _mcCheck.clientHeight;
+_canvasEl.style.width = _mcCheck.clientWidth + 'px';
+_canvasEl.style.height = _mcCheck.clientHeight + 'px';
+}
+const w = _canvasEl.width;
+const h = _canvasEl.height;
+_ctx.clearRect(0, 0, w, h);
+// 【修复】每帧重算坐标参数，确保缩放/拖拽过程中波形始终精确对齐震中
+_epicPx = _getEpicenterPixel();
+_mToPx = _getMetersToPixels();
+const cx = _epicPx.x;
+const cy = _epicPx.y;
+const scale = _mToPx;
+    // P波
+    const pRadiusM = CONFIG.P_WAVE_SPEED * elapsed * 1000;
+    const pRadiusPx = Math.max(1, pRadiusM * scale);
+    _ctx.beginPath();
+    _ctx.arc(cx, cy, pRadiusPx, 0, Math.PI * 2);
+    _ctx.strokeStyle = `rgba(255,255,255,${(0.5 * opacity).toFixed(3)})`;
+    _ctx.lineWidth = 2;
+    _ctx.stroke();
+    _ctx.fillStyle = `rgba(255,255,255,${(0.05 * opacity).toFixed(4)})`;
+    _ctx.fill();
+
+// S波 — 使用震源距公式：地表半径 = √((S_WAVE_SPEED×elapsed)² - depth²)
+let surfaceProgress = 0;
+if (elapsed >= timeToSurface) {
+const sTravelM = CONFIG.S_WAVE_SPEED * elapsed * 1000; // S波从震源出发的总传播距离(米)
+const depthM = depth * 1000;
+const sRadiusM = Math.sqrt(Math.max(0, sTravelM * sTravelM - depthM * depthM));
+const sRadiusPx = Math.max(1, sRadiusM * scale);
+        _ctx.beginPath();
+        _ctx.arc(cx, cy, sRadiusPx, 0, Math.PI * 2);
+        _ctx.strokeStyle = `rgba(${_sR},${_sG},${_sB},${(0.7 * opacity).toFixed(3)})`;
+        _ctx.lineWidth = 2.5;
+        _ctx.stroke();
+        _ctx.fillStyle = `rgba(${_sR},${_sG},${_sB},${(0.3 * opacity).toFixed(3)})`;
+        _ctx.fill();
+        surfaceProgress = 1;
+    } else {
+        surfaceProgress = elapsed / timeToSurface;
+    }
+
+    // 进度环每 4 帧更新
+_eewFrameCount++;
+if (surfaceProgress >= 1 && progressRing && STATE.eewLayer && STATE.eewLayer.hasLayer(progressRing)) {
+STATE.eewLayer.removeLayer(progressRing);
+progressRing = null;
+_cachedArcEl = null;
+} else if (_eewFrameCount % 4 === 0 && _cachedArcEl) {
+const offset = 157 * (1 - Math.min(1, surfaceProgress));
+_cachedArcEl.setAttribute('stroke-dashoffset', offset.toFixed(1));
+_cachedArcEl.setAttribute('stroke', intColor);
+_cachedArcEl.setAttribute('opacity', opacity.toFixed(2));
+}
+    // 倒计时面板每 10 帧更新
+    if (_eewFrameCount % 10 === 0) {
+        updateCountdownPanel(eq, elapsed, opacity);
+    }
+    STATE.eewAnimFrame = requestAnimationFrame(animateEew);
+}
+STATE.eewAnimFrame = requestAnimationFrame(animateEew);
+}
+
+function updateCountdownPanel(eq, elapsed, opacity) {
+    var hasHome = (STATE.homeLat !== null && STATE.homeLng !== null);
+    var dist = 0;
+    var depth = parseFloat(eq.depth) || 10;
+    var I0 = getEqIntensity(eq);
+    if (hasHome) {
+        dist = calcDistance(eq.latitude, eq.longitude, STATE.homeLat, STATE.homeLng);
+    }
+    var hypoDist = Math.sqrt(dist * dist + depth * depth);
+    var sArrivalTime = hypoDist / CONFIG.S_WAVE_SPEED;
+    var countdown = sArrivalTime - elapsed;
+
+    // 【修复】每次调用都根据当前 hasHome 状态动态更新标题和标签
+    // 解决动画进行中设置/清除家的位置后，标签不随状态变化的问题
+    var titleEl = DOM.eewCountdownPanel.querySelector('.cd-title');
+    var labelEls = DOM.eewCountdownPanel.querySelectorAll('.cd-label');
+    if (hasHome) {
+        if (titleEl) titleEl.innerHTML = '<i class="fas fa-triangle-exclamation"></i> 地震预警倒计时';
+        if (labelEls.length > 0) labelEls[0].textContent = 'S波到达您的家';
+        if (labelEls.length > 1) labelEls[1].textContent = '预计到达烈度';
+    } else {
+        if (titleEl) titleEl.innerHTML = '<i class="fas fa-triangle-exclamation"></i> 地震预警信息';
+        if (labelEls.length > 0) labelEls[0].textContent = 'S波已传播';
+        if (labelEls.length > 1) labelEls[1].textContent = '震中烈度';
+    }
+
+    if (!hasHome) {
+if (opacity > 0) {
+DOM.eewCountdownPanel.style.display = 'block';
+DOM.eewCountdownPanel.style.opacity = 1;
+var sTravelKm = CONFIG.S_WAVE_SPEED * elapsed;
+var sRadiusKm = (sTravelKm >= depth) ? Math.sqrt(sTravelKm * sTravelKm - depth * depth) : 0;
+DOM.cdTime.textContent = sRadiusKm.toFixed(0) + ' km';
+            DOM.cdTime.style.color = '#ffb347';
+            var intRounded = Math.round(I0);
+            var intColor = getIntensityColor(intRounded);
+            var romanI = intensityToRoman(intRounded);
+            DOM.cdIntensity.textContent = romanI + ' 度 (' + I0.toFixed(1) + ')';
+            DOM.cdIntensity.style.background = hexToRgba(intColor, 0.2);
+            DOM.cdIntensity.style.color = intColor;
+            DOM.cdIntensity.style.border = '1px solid ' + intColor;
+} else {
+// 【修复】波完全消失后隐藏面板
+DOM.eewCountdownPanel.style.display = 'none';
+}
+return;
+}
+var homeIntensity = calcIntensityByDistance(I0, dist, depth);
+if (countdown > 0 && opacity > 0) {
+DOM.eewCountdownPanel.style.display = 'block';
+DOM.eewCountdownPanel.style.opacity = 1;
+        var sec = Math.max(0, Math.ceil(countdown));
+        DOM.cdTime.textContent = sec + '秒';
+        DOM.cdTime.style.color = sec <= 10 ? '#ff2244' : (sec <= 30 ? '#ff9800' : '#ffb347');
+        var intRounded2 = Math.round(homeIntensity);
+        var intColor2 = getIntensityColor(intRounded2);
+        var romanI2 = intensityToRoman(intRounded2);
+        DOM.cdIntensity.textContent = romanI2 + ' 度 (' + homeIntensity.toFixed(1) + ')';
+        DOM.cdIntensity.style.background = hexToRgba(intColor2, 0.2);
+        DOM.cdIntensity.style.color = intColor2;
+        DOM.cdIntensity.style.border = '1px solid ' + intColor2;
+} else if (opacity > 0) {
+// S波已到达但波还在显示，保持面板
+DOM.eewCountdownPanel.style.display = 'block';
+DOM.eewCountdownPanel.style.opacity = 1;
+DOM.cdTime.textContent = '已到达';
+DOM.cdTime.style.color = '#ff2244';
+var intRounded3 = Math.round(homeIntensity);
+var intColor3 = getIntensityColor(intRounded3);
+var romanI3 = intensityToRoman(intRounded3);
+DOM.cdIntensity.textContent = romanI3 + ' 度 (' + homeIntensity.toFixed(1) + ')';
+DOM.cdIntensity.style.background = hexToRgba(intColor3, 0.2);
+DOM.cdIntensity.style.color = intColor3;
+DOM.cdIntensity.style.border = '1px solid ' + intColor3;
+} else {
+// 波完全消失后隐藏面板
+DOM.eewCountdownPanel.style.display = 'none';
+}
+}
+function stopEewAnimation() {
+    STATE.eewAnimating = false;
+    if (STATE.eewAnimFrame) {
+        cancelAnimationFrame(STATE.eewAnimFrame);
+        STATE.eewAnimFrame = null;
+    }
+    if (STATE.eewLayer) STATE.eewLayer.clearLayers();
+// 【修复】精确清理Canvas渲染器和事件监听，不伤害全局监听器
+if (STATE.map) {
+    if (STATE._eewMapMoveHandler) {
+        STATE.map.off('move zoom zoomend', STATE._eewMapMoveHandler);
+        STATE._eewMapMoveHandler = null;
+    }
+    if (STATE._eewMapResizeHandler) {
+        STATE.map.off('resize', STATE._eewMapResizeHandler);
+        STATE._eewMapResizeHandler = null;
+    }
+}
+var _indCanvas = document.getElementById('eewIndependentCanvas');
+if (_indCanvas) _indCanvas.remove();
+STATE.eewCanvasRenderer = null;
+    DOM.eewCountdownPanel.style.display = 'none';
+    // 恢复左上角面板
+    resetLatestEqPanelFromEew();
+    // 【修复-右上角时钟】停止动画时恢复实时时间显示
+    STATE.eewReviewMode = false;
+    STATE.eewReviewTime = null;
+    STATE.eewReviewEqTimeMs = null;
+    DOM.headerTime.style.color = '';
+    DOM.headerTime.style.borderColor = '';
+    updateHeaderTime();
+}
+/* ====== 地震预警列表渲染 ====== */
+function renderEewList() {
+    // 【修复】使用 slice() 创建副本排序，避免修改原始数组导致 idx 失效
+    const list = STATE.eewAlerts.slice();
+    list.sort((a, b) => {
+        const getTime = (eq) => {
+            if (eq._rawStartAt) return Number(eq._rawStartAt);
+            let t = new Date(eq.time).getTime();
+            if (isNaN(t) && typeof eq.time === 'string' && /^\d{10,13}$/.test(eq.time)) {
+                t = Number(eq.time);
+            }
+            return t || 0;
+        };
+        return getTime(b) - getTime(a);
+    });
+    // 【修复】无论模块是否激活，始终更新计数和渲染DOM
+    // 之前被彩蛋锁住（eewModuleVisible=false时不渲染），导致数据来了也看不到
+    const sortedList = list; // 使用排序后的副本
+    if (DOM.eewCount) DOM.eewCount.textContent = sortedList.length;
+    if (!sortedList.length) {
+    DOM.eewList.innerHTML = '<div style="text-align:center; color:#5a7a9a; font-size:14px; padding:20px 10px;"><i class="fas fa-hourglass-half" style="font-size:28px; margin-bottom:8px; display:block; color:#3a5a7a;"></i>暂无地震预警</div>';
+    DOM.eewCount.textContent = sortedList.length;
+    return;
+  }
+  DOM.eewCount.textContent = list.length;
+  let html = '';
+    sortedList.slice(0, 20).forEach((eq, i) => {
+    const id = eq.id || `eew_${i}`;
+    const mag = formatMag(eq.magnitude);
+    const loc = eq.location || '未知';
+    const time = eq.time || '';
+    const depth = eq.depth || '?';
+    const intensity = getEqIntensity(eq);
+    const color = getIntensityColor(intensity);
+    const romanI = intensityToRoman(intensity);
+    const formattedTime = time ? dayjs(time).format('YYYY-MM-DD HH:mm:ss') : '----';
+    const isReviewing = STATE.eewReviewMode && STATE.eewReviewTime === time;
+    const reviewBtnClass = isReviewing ? 'eew-btn-float review-active' : 'eew-btn-float';
+    const reviewBtnText = isReviewing ? '取消回看' : '回看';
+    html += `
+    <div class="eew-card" data-eew-id="${id}" data-eew-idx="${i}">
+      <div class="eew-int-section" style="border: 2px solid ${color}; background: ${hexToRgba(color, 0.22)};">
+        <div class="eew-int-value">${romanI}</div>
+        <div class="eew-int-label">烈度</div>
+      </div>
+      <div class="eew-info-section" style="background: ${hexToRgba(color, 0.08)};">
+        <div class="eew-location" title="${loc}">${loc}</div>
+        <div class="eew-meta-row">
+          <i class="fas fa-clock"></i>
+          <span class="eew-time-val">${formattedTime}</span>
+        </div>
+        <div class="eew-meta-row">
+<span style="color:#fff;"><svg viewBox="0 0 24 24" width="11" height="11" style="vertical-align:-1px;flex-shrink:0;"><path d="M1 12 Q4 2 7 12 T13 12 T19 12 T25 12" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg> M${mag}</span>
+          <span style="color:#fff;"><i class="fas fa-arrow-down"></i> ${depth}km</span>
+        </div>
+      </div>
+      <div class="eew-btn-group">
+<button class="${reviewBtnClass}" data-eew-id="${id}" data-eew-time="${time}" data-eew-idx="${i}">${reviewBtnText}</button>
+      </div>
+    </div>`;
+  });
+  DOM.eewList.innerHTML = html;
+
+    // 绑定回看按钮
+DOM.eewList.querySelectorAll('.eew-btn-float').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        // 【修复】通过 data-eew-id 查找地震对象，而非通过 idx（idx会被sort打乱）
+        const eewId = this.dataset.eewId;
+        const eq = STATE.eewAlerts.find(item => (item.id || '') === eewId);
+        if (!eq) return;
+        // 清除之前的延迟定时器
+        if (STATE._eewDelayTimer) { clearInterval(STATE._eewDelayTimer); STATE._eewDelayTimer = null; }
+        // 如果正在回看且点击同一项，取消回看
+if (STATE.eewReviewMode && STATE.eewReviewTime === eq.time) {
+STATE.eewReviewMode = false;
+STATE.eewReviewTime = null;
+STATE.eewReviewEqTimeMs = null;
+// 【修复-右上角时钟】取消回看，恢复实时时间显示和原样式
+DOM.headerTime.style.color = '';
+DOM.headerTime.style.borderColor = '';
+updateHeaderTime();
+stopEewAnimation();
+clearIntensityMapSilent();
+renderEewList();
+// 取消回看后，消费暂存的地震数据
+consumePendingLatestEq();
+return;
+}
+// 【修复F】先停止任何正在进行的动画，并重置回看模式状态
+if (STATE.eewAnimFrame) {
+    cancelAnimationFrame(STATE.eewAnimFrame);
+    STATE.eewAnimFrame = null;
+}
+STATE.eewAnimating = false;
+STATE.eewReviewMode = false;
+STATE.eewReviewTime = null;
+if (STATE.eewLayer) STATE.eewLayer.clearLayers();
+// 【修复】清除旧的独立Canvas（横纵波）
+var _oldCanvas = document.getElementById('eewIndependentCanvas');
+if (_oldCanvas) _oldCanvas.remove();
+STATE.eewCanvasRenderer = null;
+// 【修复】清除旧的烈度分布图
+clearIntensityMapSilent();
+DOM.eewCountdownPanel.style.display = 'none';
+resetLatestEqPanelFromEew();
+        // 计算预警发布延迟（毫秒）
+        let delayMs = 0;
+        if (eq._rawStartAt && eq._rawUpdateAt) {
+            delayMs = Number(eq._rawUpdateAt) - Number(eq._rawStartAt);
+        }
+        if (delayMs < 0) delayMs = 0;
+        // 设置回看状态
+        STATE.eewReviewMode = true;
+        STATE.eewReviewTime = eq.time;
+
+        // 【修复-立即切换时间】点击回看后，立即将右上角时间改为发震时间（橙色）
+        // 不再等待 startEewReviewAnimation 被调用（可能有预警发布延迟倒计时）
+        let _eqTimeMs;
+        if (eq._rawStartAt) {
+            _eqTimeMs = Number(eq._rawStartAt);
+        } else {
+            _eqTimeMs = new Date(eq.time).getTime();
+            if (isNaN(_eqTimeMs) && typeof eq.time === 'string' && eq.time.includes(' ')) {
+                _eqTimeMs = new Date(eq.time.replace(' ', 'T')).getTime();
+            }
+        }
+        if (isNaN(_eqTimeMs)) _eqTimeMs = Date.now();
+        STATE.eewReviewEqTimeMs = _eqTimeMs;
+        STATE.eewReviewStartRealTime = Date.now();
+        DOM.headerTime.textContent = dayjs(_eqTimeMs).format('YYYY-MM-DD HH:mm:ss');
+        DOM.headerTime.style.color = '#ff9800';
+        DOM.headerTime.style.borderColor = '#ff9800';
+
+        STATE.map.setView([eq.latitude, eq.longitude], 7, { animate: true });
+        // 【修复G】先更新按钮状态，不重建DOM
+        DOM.eewList.querySelectorAll('.eew-btn-float').forEach(b => {
+            const bId = b.dataset.eewId;
+            if (bId === eewId) {
+                b.textContent = '取消回看';
+                b.classList.add('review-active');
+            } else {
+                b.textContent = '回看';
+                b.classList.remove('review-active');
+            }
+        });
+        // 如果有延迟，先显示倒计时提示，然后启动动画
+        if (delayMs > 0) {
+            const cdPanel = DOM.eewCountdownPanel;
+            cdPanel.style.display = 'block';
+            cdPanel.style.opacity = 1;
+            cdPanel.querySelector('.cd-title').innerHTML = '<i class="fas fa-hourglass-start"></i> 预警发布倒计时';
+            const cdTimeEl = cdPanel.querySelector('.cd-time');
+            const cdLabel = cdPanel.querySelector('.cd-label');
+            const cdIntensity = cdPanel.querySelector('.cd-intensity');
+            cdLabel.textContent = '即将发布';
+            cdIntensity.textContent = '--';
+            let remaining = Math.ceil(delayMs / 1000);
+            cdTimeEl.textContent = remaining + '秒';
+            cdTimeEl.style.color = '#ffb347';
+            if (STATE._eewDelayTimer) { clearInterval(STATE._eewDelayTimer); STATE._eewDelayTimer = null; }
+            STATE._eewDelayTimer = setInterval(() => {
+                remaining--;
+                if (remaining <= 0) {
+                    clearInterval(STATE._eewDelayTimer);
+                    STATE._eewDelayTimer = null;
+                    cdPanel.style.display = 'none';
+                    startEewReviewAnimation(eq);
+                } else {
+                    cdTimeEl.textContent = remaining + '秒';
+                }
+            }, 1000);
+        } else {
+            // 无延迟，直接启动
+            startEewReviewAnimation(eq);
+        }
+    });
+});
+}
+/* 回看模式动画 - 修复版v2：模拟时间从头播放 + 增强面板和倒计时鲁棒性 */
+/* 回看模式动画 - 修复版v3：修复倒计时不显示、震中X图标不显示、左上角面板不更新问题 */
+function startEewReviewAnimation(eq) {
+    if (STATE.eewAnimFrame) cancelAnimationFrame(STATE.eewAnimFrame);
+    // 先停止动画状态，避免竞态
+    STATE.eewAnimating = false;
+
+    // 【修复A】确保 eewLayer 存在且已添加到地图
+    if (STATE.eewLayer) {
+        STATE.eewLayer.clearLayers();
+        // 确保 layer 仍在地图上（可能之前被 removeLayer）
+        if (!STATE.map.hasLayer(STATE.eewLayer)) {
+            STATE.eewLayer.addTo(STATE.map);
+        }
+    } else {
+        STATE.eewLayer = L.layerGroup().addTo(STATE.map);
+    }
+
+    // 【修复B】更新左上角面板为预警模式
+    updateLatestEqPanelEew(eq);
+    STATE.eewCurrentAlert = eq;
+
+    const eqLat = eq.latitude;
+    const eqLon = eq.longitude;
+    const depth = parseFloat(eq.depth) || 10;
+    const I0 = getEqIntensity(eq);
+    const intColor = getIntensityColor(I0);
+    const config = getEewFadeConfig(eq);
+    const timeToSurface = depth / CONFIG.S_WAVE_SPEED;
+
+    // 【修复-烈度图】渲染烈度分布图（仅渲染行政区划填色，不添加震中X图标）
+    applyIntensityMapNoMarker(eq);
+    if (STATE.intensityOverlayLayer) STATE.intensityOverlayLayer.clearLayers();
+
+    // 【修复C】恢复倒计时面板
+    const cdPanel = DOM.eewCountdownPanel;
+    cdPanel.querySelector('.cd-title').innerHTML = '<i class="fas fa-triangle-exclamation"></i> 地震预警倒计时';
+    var cdLabelEl = cdPanel.querySelectorAll('.cd-label');
+    if (cdLabelEl.length > 0) {
+        cdLabelEl[0].textContent = 'S波到达您的家';
+    }
+    cdPanel.style.display = 'block';
+    cdPanel.style.opacity = 1;
+
+    DOM.cdTime.textContent = '计算中...';
+    DOM.cdTime.style.color = '#ffb347';
+    DOM.cdIntensity.textContent = '--';
+
+    // 【修复D】闪烁震中X图标 - 直接在函数内添加，不依赖setTimeout
+    var flashIcon = L.divIcon({
+        html: '<div class="eew-flash-icon"><svg viewBox="0 0 28 28" width="38" height="38">' +
+            '<line x1="4" y1="4" x2="24" y2="24" stroke="#ffffaa" stroke-width="7.5" stroke-linecap="round"/>' +
+            '<line x1="24" y1="4" x2="4" y2="24" stroke="#ffffaa" stroke-width="7.5" stroke-linecap="round"/>' +
+            '<line x1="4" y1="4" x2="24" y2="24" stroke="#ff0000" stroke-width="3.5" stroke-linecap="round"/>' +
+            '<line x1="24" y1="4" x2="4" y2="24" stroke="#ff0000" stroke-width="3.5" stroke-linecap="round"/>' +
+            '</svg></div>',
+        iconSize: [38, 38], iconAnchor: [19, 19], className: ''
+    });
+    L.marker([eqLat, eqLon], { icon: flashIcon, zIndexOffset: 2000 })
+        .bindTooltip('震中（预警回看）', { permanent: false, className: 'custom-tooltip' })
+        .addTo(STATE.eewLayer);
+
+// 【修复】使用独立的原生 Canvas，避免 Leaflet 渲染器自动清除画布
+if (STATE.eewCanvasRenderer) {
+    if (STATE.eewCanvasRenderer._container) STATE.eewCanvasRenderer._container.remove();
+    STATE.eewCanvasRenderer = null;
+}
+var _oldIndCanvas2 = document.getElementById('eewIndependentCanvas');
+if (_oldIndCanvas2) _oldIndCanvas2.remove();
+const _canvasEl = document.createElement('canvas');
+_canvasEl.id = 'eewIndependentCanvas';
+_canvasEl.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;z-index:800;';
+var _mapContainer2 = STATE.map.getContainer();
+_mapContainer2.appendChild(_canvasEl);
+_canvasEl.width = _mapContainer2.clientWidth;
+_canvasEl.height = _mapContainer2.clientHeight;
+const _ctx = _canvasEl.getContext('2d');
+
+function _getEpicenterPixel() {
+    var pt = STATE.map.latLngToContainerPoint([eqLat, eqLon]);
+    return { x: pt.x, y: pt.y };
+}
+function _getMetersToPixels() {
+    const zoom = STATE.map.getZoom();
+    const latRad = eqLat * Math.PI / 180;
+    // Web Mercator 解析公式：像素/米 = (256 × 2^zoom) / (2πR × cos(纬度))
+    // 替代原有采样法，消除不同缩放级别下Mercator非线性导致的半径偏差
+    const earthCircumference = 2 * Math.PI * 6378137;
+    const metersPerPixel = earthCircumference * Math.cos(latRad) / (256 * Math.pow(2, zoom));
+    return 1 / metersPerPixel;
+}
+let _epicPx = _getEpicenterPixel();
+let _mToPx = _getMetersToPixels();
+
+function _onMapMoveReview() {
+    _epicPx = _getEpicenterPixel();
+    _mToPx = _getMetersToPixels();
+}
+function _onMapResizeReview() {
+var _mc2 = STATE.map.getContainer();
+var _w = _mc2.clientWidth;
+var _h = _mc2.clientHeight;
+if (_w > 0 && _h > 0) {
+_canvasEl.width = _w;
+_canvasEl.height = _h;
+_canvasEl.style.width = _w + 'px';
+_canvasEl.style.height = _h + 'px';
+}
+}
+_onMapResizeReview();
+function _syncCanvasSizeReview() {
+var _mc2 = STATE.map.getContainer();
+var _w = _mc2.clientWidth;
+var _h = _mc2.clientHeight;
+if (_w > 0 && _h > 0 && (_canvasEl.width !== _w || _canvasEl.height !== _h)) {
+_canvasEl.width = _w;
+_canvasEl.height = _h;
+_canvasEl.style.width = _w + 'px';
+_canvasEl.style.height = _h + 'px';
+}
+}
+// 【修复】使用命名函数并存入STATE，确保清理时能精确移除
+STATE._eewMapMoveHandler = function() {
+    _syncCanvasSizeReview();
+    _epicPx = _getEpicenterPixel();
+    _mToPx = _getMetersToPixels();
+};
+STATE._eewMapResizeHandler = _onMapResizeReview;
+STATE.map.on('move zoom zoomend', STATE._eewMapMoveHandler);
+STATE.map.on('resize', STATE._eewMapResizeHandler);
+const _sR = parseInt(intColor.slice(1, 3), 16);
+const _sG = parseInt(intColor.slice(3, 5), 16);
+const _sB = parseInt(intColor.slice(5, 7), 16);
+
+// S波到达地表进度环
+var progressRing = L.marker([eqLat, eqLon], {
+    icon: L.divIcon({
+        html: '<svg width="60" height="60" viewBox="0 0 60 60">' +
+            '<circle cx="30" cy="30" r="25" fill="none" stroke="rgba(100,100,100,0.3)" stroke-width="4"/>' +
+            '<circle cx="30" cy="30" r="25" fill="none" stroke="' + intColor + '" stroke-width="4"' +
+            ' stroke-dasharray="157" stroke-dashoffset="157" stroke-linecap="round"' +
+            ' transform="rotate(-90 30 30)" id="sWaveProgressArcReview"/>' +
+            '</svg>',
+        iconSize: [60, 60], iconAnchor: [30, 30], className: ''
+    }),
+    zIndexOffset: 1500
+}).addTo(STATE.eewLayer);
+
+// 【修复-音频】播放地震发生音效
+playSound('eq-happened');
+// 【修复】强震音效判断：震级≥7 OR 烈度≥7 均触发
+var _reviewIntensity = getEqIntensity(eq);
+if (eq.magnitude >= 7 || _reviewIntensity >= 7) {
+    setTimeout(() => playSound('strong-eq'), 500);
+}
+if (STATE.homeLat !== null && STATE.homeLng !== null) {
+    var _dist = calcDistance(eq.latitude, eq.longitude, STATE.homeLat, STATE.homeLng);
+    var _homeInt = calcIntensityByDistance(_reviewIntensity, _dist, depth);
+    if (_homeInt >= 7) {
+        setTimeout(() => playSound('eew-strong'), 1000);
+    } else if (_homeInt >= 3) {
+        setTimeout(() => playSound('eew-weak'), 1000);
+    }
+}
+
+// 启动动画
+STATE.eewAnimating = true;
+
+var _eqOriginMs;
+if (eq._rawStartAt) {
+    _eqOriginMs = Number(eq._rawStartAt);
+} else {
+    _eqOriginMs = new Date(eq.time).getTime();
+    if (isNaN(_eqOriginMs) && typeof eq.time === 'string' && eq.time.includes(' ')) {
+        _eqOriginMs = new Date(eq.time.replace(' ', 'T')).getTime();
+    }
+}
+if (isNaN(_eqOriginMs)) _eqOriginMs = Date.now();
+
+var _eewDelaySec = 0;
+if (eq._rawUpdateAt && eq._rawStartAt) {
+    _eewDelaySec = Math.max(0, (Number(eq._rawUpdateAt) - Number(eq._rawStartAt)) / 1000);
+}
+var _initialElapsed = _eewDelaySec;
+var _reviewSimStart = Date.now() - (_initialElapsed * 1000);
+var _eqIntensityForTime = getEqIntensity(eq);
+// 【新增】烈度≥9：在≥7的基础上多持续60秒
+var _additionalPlayTime = (_eqIntensityForTime >= 9) ? 210 : (_eqIntensityForTime >= 7) ? 150 : 90;
+var _reviewMaxTime = _initialElapsed + _additionalPlayTime;
+var _reviewFadeStart = _initialElapsed + _additionalPlayTime * 0.6;
+var _reviewFrameCount = 0;
+var _cachedArcElReview = document.getElementById('sWaveProgressArcReview');
+
+function animateReview() {
+    var now = Date.now();
+    var elapsed = (now - _reviewSimStart) / 1000;
+if (elapsed > _reviewMaxTime || !STATE.eewAnimating) {
+STATE.eewAnimating = false;
+// 【修复】使用精确函数引用移除，修复原先匿名函数无法被移除的bug
+if (STATE._eewMapMoveHandler) {
+    STATE.map.off('move zoom zoomend', STATE._eewMapMoveHandler);
+    STATE._eewMapMoveHandler = null;
+}
+if (STATE._eewMapResizeHandler) {
+    STATE.map.off('resize', STATE._eewMapResizeHandler);
+    STATE._eewMapResizeHandler = null;
+}
+if (_canvasEl && _canvasEl.parentNode) _canvasEl.remove();
+STATE.eewCanvasRenderer = null;
+// 【修复】波完全消失后隐藏倒计时面板
+DOM.eewCountdownPanel.style.display = 'none';
+resetLatestEqPanelFromEew();
+// 地震波消失后60秒自动清除烈度分布图及残留的闪烁震中图标
+if (STATE._intensityAutoClearTimer) clearTimeout(STATE._intensityAutoClearTimer);
+STATE._intensityAutoClearTimer = setTimeout(function() {
+if (!STATE.eewAnimating) {
+clearIntensityMapSilent();
+// 清除eewLayer中可能残留的闪烁震中X图标
+if (STATE.eewLayer) STATE.eewLayer.clearLayers();
+// 烈度图消失后，消费暂存的地震数据
+consumePendingLatestEq();
+}
+STATE._intensityAutoClearTimer = null;
+}, 60000);
+return;
+}
+    var opacity = 1;
+    if (elapsed > _reviewFadeStart) {
+        opacity = 1 - (elapsed - _reviewFadeStart) / (_reviewMaxTime - _reviewFadeStart);
+        opacity = Math.max(0, opacity);
+    }
+
+// 【修复】每帧检查Canvas尺寸，防止缩放过程中缓冲区与容器不一致
+var _mcCheck2 = STATE.map.getContainer();
+if (_canvasEl.width !== _mcCheck2.clientWidth || _canvasEl.height !== _mcCheck2.clientHeight) {
+_canvasEl.width = _mcCheck2.clientWidth;
+_canvasEl.height = _mcCheck2.clientHeight;
+_canvasEl.style.width = _mcCheck2.clientWidth + 'px';
+_canvasEl.style.height = _mcCheck2.clientHeight + 'px';
+}
+var w = _canvasEl.width;
+var h = _canvasEl.height;
+_ctx.clearRect(0, 0, w, h);
+// 【修复】每帧重算坐标参数，确保缩放/拖拽过程中波形始终精确对齐震中
+_epicPx = _getEpicenterPixel();
+_mToPx = _getMetersToPixels();
+var cx = _epicPx.x;
+var cy = _epicPx.y;
+var scale = _mToPx;
+    // P波
+    var pRadiusM = CONFIG.P_WAVE_SPEED * elapsed * 1000;
+    var pRadiusPx = Math.max(1, pRadiusM * scale);
+    _ctx.beginPath();
+    _ctx.arc(cx, cy, pRadiusPx, 0, Math.PI * 2);
+    _ctx.strokeStyle = 'rgba(255,255,255,' + (0.5 * opacity).toFixed(3) + ')';
+    _ctx.lineWidth = 2;
+    _ctx.stroke();
+    _ctx.fillStyle = 'rgba(255,255,255,' + (0.05 * opacity).toFixed(4) + ')';
+    _ctx.fill();
+
+// S波 — 使用震源距公式：地表半径 = √((S_WAVE_SPEED×elapsed)² - depth²)
+var surfaceProgress = 0;
+if (elapsed >= timeToSurface) {
+var sTravelM = CONFIG.S_WAVE_SPEED * elapsed * 1000; // S波从震源出发的总传播距离(米)
+var depthM = depth * 1000;
+var sRadiusM = Math.sqrt(Math.max(0, sTravelM * sTravelM - depthM * depthM));
+var sRadiusPx = Math.max(1, sRadiusM * scale);
+        _ctx.beginPath();
+        _ctx.arc(cx, cy, sRadiusPx, 0, Math.PI * 2);
+        _ctx.strokeStyle = 'rgba(' + _sR + ',' + _sG + ',' + _sB + ',' + (0.7 * opacity).toFixed(3) + ')';
+        _ctx.lineWidth = 2.5;
+        _ctx.stroke();
+        _ctx.fillStyle = 'rgba(' + _sR + ',' + _sG + ',' + _sB + ',' + (0.3 * opacity).toFixed(3) + ')';
+        _ctx.fill();
+        surfaceProgress = 1;
+    } else {
+        surfaceProgress = elapsed / timeToSurface;
+    }
+
+_reviewFrameCount++;
+if (surfaceProgress >= 1 && progressRing && STATE.eewLayer && STATE.eewLayer.hasLayer(progressRing)) {
+STATE.eewLayer.removeLayer(progressRing);
+progressRing = null;
+_cachedArcElReview = null;
+} else if (_reviewFrameCount % 4 === 0 && _cachedArcElReview) {
+var offset = 157 * (1 - Math.min(1, surfaceProgress));
+_cachedArcElReview.setAttribute('stroke-dashoffset', offset.toFixed(1));
+_cachedArcElReview.setAttribute('opacity', opacity.toFixed(2));
+}
+    if (_reviewFrameCount % 10 === 0) {
+        updateCountdownPanel(eq, elapsed, opacity);
+    }
+    STATE.eewAnimFrame = requestAnimationFrame(animateReview);
+}
+STATE.eewAnimFrame = requestAnimationFrame(animateReview);
+}
+/* ====== 地震预警数据源获取 ====== */
+function initEewModule() {
+  // 根据激活的数据源启动连接
+  if (STATE.eewActiveSources['cenc-wss']) {
+    connectEewCencWss();
+  }
+  if (STATE.eewActiveSources['cenc-http']) {
+    startEewCencHttp();
+  }
+  if (STATE.eewActiveSources['chinaeew']) {
+    startEewChinaEwwHttp();
+  }
+
+// 定期清理：仅限制列表最大数量，不再按时间过滤
+setInterval(() => {
+    // 超过100条时只保留最新50条，防止内存膨胀
+    if (STATE.eewAlerts.length > 100) {
+        STATE.eewAlerts = STATE.eewAlerts.slice(0, 50);
+    }
+    // 清理音效冷却记录
+    const now = Date.now();
+    Object.keys(STATE.eewSoundCooldown).forEach(key => {
+        if (now - STATE.eewSoundCooldown[key] > 30000) {
+            delete STATE.eewSoundCooldown[key];
+        }
+    });
+// 清理报次跟踪记录（超过30分钟无更新的事件）
+Object.keys(STATE.eewReportTracker).forEach(key => {
+    if (now - (STATE.eewReportTracker[key].lastSoundTime || 0) > 600000) {
+        delete STATE.eewReportTracker[key];
+    }
+});
+}, 60000); // 每分钟清理一次
+}
+function connectEewCencWss() {
+  if (STATE.eewCencWsInstance) {
+    try { STATE.eewCencWsInstance.close(); } catch(e) {}
+  }
+  try {
+    const ws = new WebSocket(CONFIG.WS_WOLFX_CENC_EEW);
+    STATE.eewCencWsInstance = ws;
+    ws.onopen = () => {
+      console.log('[EEW WSS] CENC EEW WebSocket已连接');
+      recordApiCall('WS/cenc_eew_eew', 'WS', 'ws_ok', 0, 0);
+    };
+    ws.onmessage = (ev) => {
+      try {
+        const raw = JSON.parse(ev.data);
+        if (raw.type === 'heartbeat' || raw.type === 'pong') return;
+        // 兼容嵌套结构：{ type: "eew", data: {...} } 或直接 {...}
+        let data = raw;
+        if (raw.data && typeof raw.data === 'object') {
+          data = raw.data;
+        }
+        // 也兼容 raw.type 包含 eew 关键字的情况
+        if (raw.type && typeof raw.type === 'string' && raw.type.toLowerCase().includes('eew') && raw.data) {
+          data = raw.data;
+        }
+        // 宽松过滤：只要有经纬度或震级就认为是有效数据
+        const hasLat = data.Latitude || data.Lat || data.latitude;
+        const hasLon = data.Longitude || data.Lon || data.longitude;
+        const hasMag = data.Magnitude || data.Magunitude || data.magnitude;
+        const hasTime = data.OriginTime || data.ReportTime || data.time;
+        if (!hasLat && !hasLon && !hasMag && !hasTime) {
+          console.log('[EEW WSS] 忽略无效数据:', JSON.stringify(raw).substring(0, 200));
+          return;
+        }
+        recordApiCall('WS/cenc_eew_eew', 'MSG', 'ws_ok', new Blob([ev.data]).size, 0);
+        const eq = normalizeEewData(data, 'cenc-wss');
+        if (eq && eq.latitude && eq.longitude) {
+          processEewAlert(eq);
+        }
+      } catch(e) {
+        console.warn('[EEW WSS] 解析消息失败:', e);
+      }
+    };
+    ws.onerror = () => recordApiCall('WS/cenc_eew_eew', 'WS', 'error', 0, 0, '错误');
+    ws.onclose = () => {
+      recordApiCall('WS/cenc_eew_eew', 'WS', 'closed', 0, 0, '断开');
+      if (STATE.eewActiveSources['cenc-wss']) {
+        setTimeout(() => connectEewCencWss(), 5000);
+      }
+    };
+    // 心跳
+    function sendEewHb() {
+      if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'ping' }));
+      setTimeout(() => { if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) sendEewHb(); }, 30000);
+    }
+    sendEewHb();
+  } catch(e) {
+    console.warn('[EEW WSS] 连接失败:', e);
+  }
+}
+
+function startEewCencHttp() {
+  if (STATE.eewHttpTimer) clearInterval(STATE.eewHttpTimer);
+  STATE.eewCencHttpActive = true;
+  fetchEewCencHttp();
+  STATE.eewHttpTimer = setInterval(fetchEewCencHttp, CONFIG.REFRESH_EEW_HTTP);
+}
+
+function fetchEewCencHttp() {
+  fetch(CONFIG.API_CENC_EEW_HTTP).then(res => res.json()).then(raw => {
+    if (!raw || typeof raw !== 'object') return;
+    // 兼容嵌套结构
+    let data = raw;
+    if (raw.data && typeof raw.data === 'object') data = raw.data;
+    if (raw.eew && typeof raw.eew === 'object') data = raw.eew;
+
+    // 宽松检查
+    const hasLat = data.Latitude || data.Lat || data.latitude;
+    const hasTime = data.OriginTime || data.ReportTime || data.time;
+    if (!hasLat && !hasTime) return;
+
+const t = data.OriginTime || data.ReportTime || data.time;
+if (t) {
+    const eqTime = new Date(t).getTime();
+    if (isNaN(eqTime)) return;
+}
+// API统计已由全局fetch拦截器自动记录，此处不再手动记录
+const eq = normalizeEewData(data, 'cenc-http');
+    if (eq && eq.latitude && eq.longitude) {
+      processEewAlert(eq);
+    }
+  }).catch(err => {
+    console.warn('[EEW HTTP] CENC EEW请求失败:', err);
+  });
+}
+function startEewChinaEwwHttp() {
+  if (STATE.eewChinaEwwTimer) clearInterval(STATE.eewChinaEwwTimer);
+  fetchEewChinaEww();
+  STATE.eewChinaEwwTimer = setInterval(fetchEewChinaEww, CONFIG.REFRESH_EEW_HTTP);
+}
+
+function fetchEewChinaEww() {
+  fetch(CONFIG.API_CHINAEWW).then(res => res.json()).then(raw => {
+    let list = [];
+    if (Array.isArray(raw)) list = raw;
+    else if (raw.data && Array.isArray(raw.data)) list = raw.data;
+    else if (raw.data && typeof raw.data === 'object') list = [raw.data];
+    else if (raw.earlywarnings && Array.isArray(raw.earlywarnings)) list = raw.earlywarnings;
+    else if (raw && typeof raw === 'object' && (raw.latitude || raw.magnitude || raw.startAt)) list = [raw];
+    if (!list.length) return;
+
+    const now = Date.now();
+    let hasRecorded = false;
+    list.forEach(item => {
+      // ChinaEWW 的时间字段是 startAt（毫秒时间戳）
+      let eqTimeMs = 0;
+      if (item.startAt) {
+        eqTimeMs = Number(item.startAt);
+      } else {
+        const t = item.origin_time || item.time || item.OriginTime;
+        if (t) eqTimeMs = new Date(t).getTime();
+      }
+if (!eqTimeMs || isNaN(eqTimeMs)) return;
+// 不再限制时间，所有历史预警都保留
+
+// API统计已由全局fetch拦截器自动记录，此处不再手动记录
+
+      const eq = normalizeEewData(item, 'chinaeew');
+      if (eq && eq.latitude && eq.longitude) {
+        processEewAlert(eq);
+      }
+    });
+  }).catch(err => {
+    console.warn('[EEW] ChinaEWW请求失败:', err);
+  });
+}
+function stopEewCencHttp() {
+  if (STATE.eewHttpTimer) { clearInterval(STATE.eewHttpTimer); STATE.eewHttpTimer = null; }
+  STATE.eewCencHttpActive = false;
+}
+
+function stopEewChinaEwwHttp() {
+  if (STATE.eewChinaEwwTimer) { clearInterval(STATE.eewChinaEwwTimer); STATE.eewChinaEwwTimer = null; }
+}
+
+function stopEewCencWss() {
+  if (STATE.eewCencWsInstance) {
+    try { STATE.eewCencWsInstance.close(); } catch(e) {}
+    STATE.eewCencWsInstance = null;
+  }
+}
+
+/* ====== 地震预警模块默认显示（原"点击5次解锁"彩蛋已移除） ====== */
+function initEewEasterEgg() {
+  // 打开软件后自动显示地震预警模块，无需点击解锁
+  toggleEewModule(true);
+}
+function toggleEewModule(show) {
+  STATE.eewModuleVisible = show;
+  if (show) {
+    DOM.navEew.style.display = 'flex';
+    // 如果当前不在地震预警页，不自动切换
+  } else {
+    DOM.navEew.style.display = 'none';
+    DOM.eewHistoryFloat.style.display = 'none';
+  }
+}
+
+/* ====== 数据源设置逻辑（嵌入设置对话框，支持地震预警数据源单选） ====== */
+function syncDatasourceState() {
+  const histOptions = document.querySelectorAll('#sc-datasource .ds-option[data-source]');
+  const eewOptions = document.querySelectorAll('#sc-datasource .ds-option[data-eew-source]');
+  // 同步历史数据源
+  const current = STATE.eqDataSource;
+  histOptions.forEach(opt => {
+    const radio = opt.querySelector('input[type="radio"]');
+    if (radio.value === current) { radio.checked = true; opt.classList.add('active'); }
+    else { radio.checked = false; opt.classList.remove('active'); }
+  });
+  // 同步预警数据源（单选模式）
+  eewOptions.forEach(opt => {
+    const radio = opt.querySelector('input[type="radio"]');
+    const val = radio.value;
+    if (STATE.eewActiveSources[val]) { radio.checked = true; opt.classList.add('active'); }
+    else { radio.checked = false; opt.classList.remove('active'); }
+  });
+}
+function initDatasourceSettingV2() {
+  const btnConfirm = document.getElementById('btnConfirmDs');
+  const histOptions = document.querySelectorAll('#sc-datasource .ds-option[data-source]');
+  const eewOptions = document.querySelectorAll('#sc-datasource .ds-option[data-eew-source]');
+
+  histOptions.forEach(opt => {
+    opt.addEventListener('click', function() {
+      histOptions.forEach(o => o.classList.remove('active'));
+      this.classList.add('active');
+      this.querySelector('input[type="radio"]').checked = true;
+    });
+  });
+
+  eewOptions.forEach(opt => {
+    opt.addEventListener('click', function() {
+      // 单选模式：点击哪个选项即选中哪个
+      eewOptions.forEach(o => o.classList.remove('active'));
+      this.classList.add('active');
+      this.querySelector('input[type="radio"]').checked = true;
+    });
+  });
+
+  btnConfirm.addEventListener('click', function() {
+    // 历史数据源切换
+    const selectedHist = document.querySelector('input[name="ds"]:checked');
+    if (selectedHist && selectedHist.value !== STATE.eqDataSource) {
+      STATE.eqDataSource = selectedHist.value;
+      STATE.lastEqListSnapshot = '';
+      STATE.earthquakes = [];
+      DOM.eqHistoryList.innerHTML = '<div style="text-align:center; color:#5a7a9a; font-size:14px; padding:20px 10px;"><i class="fas fa-spinner fa-spin" style="font-size:28px; margin-bottom:8px; display:block; color:#3a5a7a;"></i>正在切换数据源...</div>';
+      fetchByDataSource();
+    }
+
+    // 预警数据源切换（单选模式，取消双线并行）
+    const newEewSources = { 'cenc-wss': false, 'cenc-http': false, 'chinaeew': false };
+    const selectedEew = document.querySelector('input[name="eew-ds"]:checked');
+    if (selectedEew) newEewSources[selectedEew.value] = true;
+
+    // 停止旧的
+    if (STATE.eewActiveSources['cenc-wss'] && !newEewSources['cenc-wss']) stopEewCencWss();
+    if (STATE.eewActiveSources['cenc-http'] && !newEewSources['cenc-http']) stopEewCencHttp();
+    if (STATE.eewActiveSources['chinaeew'] && !newEewSources['chinaeew']) stopEewChinaEwwHttp();
+
+    STATE.eewActiveSources = newEewSources;
+
+    // 启动新的
+    if (newEewSources['cenc-wss'] && !STATE.eewCencWsInstance) connectEewCencWss();
+    if (newEewSources['cenc-http'] && !STATE.eewCencHttpActive) startEewCencHttp();
+    if (newEewSources['chinaeew'] && !STATE.eewChinaEwwTimer) startEewChinaEwwHttp();
+
+    console.log('[EEW数据源] 当前配置:', STATE.eewActiveSources);
+    btnConfirm.textContent = '✓ 已切换';
+    setTimeout(function() { btnConfirm.textContent = '确认切换'; }, 1500);
+  });
+}
+/* ====== 页面缩放功能（仅缩放UI面板，不缩放地图） ====== */
+function initZoomSetting() {
+    const slider = document.getElementById('zoomSlider');
+    const valueDisplay = document.getElementById('zoomValueDisplay');
+    const btnReset = document.getElementById('btnResetZoom');
+    const presetBtns = document.querySelectorAll('#sc-page .zoom-preset-btns button');
+
+    // 需要缩放的UI元素选择器（不含地图）
+    const ZOOM_TARGETS = [
+        '#header',
+        '#top-nav-bar',
+        '#latest-eq-panel',
+        '#eq-history-float',
+        '#eew-history-float',
+        '#eew-countdown-panel',
+        '#intensity-legend',
+        '#side-panel',
+        '#settings-center-overlay'
+    ];
+
+    // 从 localStorage 读取保存的缩放值
+    let savedZoom = parseInt(localStorage.getItem('pageZoom')) || 100;
+
+    function applyZoom(value) {
+        const scale = value / 100;
+        // 对每个UI元素单独设置zoom，不动 document.documentElement
+        ZOOM_TARGETS.forEach(function(selector) {
+            const el = document.querySelector(selector);
+            if (el) {
+                el.style.zoom = scale;
+            }
+        });
+        valueDisplay.textContent = value + '%';
+        slider.value = value;
+        try { localStorage.setItem('pageZoom', String(value)); } catch(e) {}
+    }
+
+    // 初始化应用
+    applyZoom(savedZoom);
+
+    slider.addEventListener('input', function() {
+        applyZoom(parseInt(this.value));
+    });
+
+    presetBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            applyZoom(parseInt(this.dataset.zoom));
+        });
+    });
+
+    btnReset.addEventListener('click', function() {
+        applyZoom(100);
+    });
+}
+/* ====== 统一设置对话框（屏幕居中弹出：左侧导航 + 右侧详情） ====== */
+function closeSettingsDialog() {
+  const ov = document.getElementById('settings-center-overlay');
+  if (ov) ov.classList.remove('show');
+  const nav = document.getElementById('navSettings');
+  if (nav) nav.classList.remove('active');
+}
+function initSettingsDialog() {
+  const btn = document.getElementById('navSettings');
+  const overlay = document.getElementById('settings-center-overlay');
+  if (!btn || !overlay) return;
+  const navItems = overlay.querySelectorAll('.sc-nav-item');
+  const panels = overlay.querySelectorAll('.sc-panel');
+
+  function showPanel(name) {
+    navItems.forEach(n => n.classList.toggle('active', n.dataset.scpanel === name));
+    panels.forEach(p => p.classList.toggle('active', p.id === name));
+    if (name === 'sc-datasource') syncDatasourceState();
+    if (name === 'sc-home' && window._fillHomeInputs) window._fillHomeInputs();
+  }
+
+  navItems.forEach(n => n.addEventListener('click', function() { showPanel(this.dataset.scpanel); }));
+
+  btn.addEventListener('click', function() {
+    overlay.classList.add('show');
+    btn.classList.add('active');
+    showPanel('sc-page');
+  });
+
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeSettingsDialog();
+  });
+  const btnClose = document.getElementById('btnCloseSettings');
+  if (btnClose) btnClose.addEventListener('click', closeSettingsDialog);
+}
+/* ====== 浮窗设置（地震历史/地震预警浮窗的透明度与毛玻璃模糊度） ====== */
+function initFloatSetting() {
+  const opSlider = document.getElementById('floatOpacitySlider');
+  const opValue = document.getElementById('floatOpacityValue');
+  const blurSlider = document.getElementById('floatBlurSlider');
+  const blurValue = document.getElementById('floatBlurValue');
+  const btnReset = document.getElementById('btnResetFloat');
+
+  function applyFloatOpacity(v) {
+    document.documentElement.style.setProperty('--panel-opacity', (v / 100).toFixed(2));
+    if (opValue) opValue.textContent = v + '%';
+    try { localStorage.setItem('floatOpacity', String(v)); } catch(e) {}
+  }
+  function applyFloatBlur(px) {
+    document.documentElement.style.setProperty('--panel-blur', px + 'px');
+    if (blurValue) blurValue.textContent = px + 'px';
+    try { localStorage.setItem('floatBlur', String(px)); } catch(e) {}
+  }
+
+  // 读取保存的设置（透明度默认100%，模糊度默认8px）
+  let v = parseInt(localStorage.getItem('floatOpacity'));
+  if (isNaN(v)) v = 100;
+  v = Math.min(100, Math.max(20, v));
+  let b = parseInt(localStorage.getItem('floatBlur'));
+  if (isNaN(b)) b = 8;
+  b = Math.min(24, Math.max(0, b));
+  applyFloatOpacity(v);
+  applyFloatBlur(b);
+  if (opSlider) opSlider.value = v;
+  if (blurSlider) blurSlider.value = b;
+
+  if (opSlider) opSlider.addEventListener('input', function() { applyFloatOpacity(parseInt(this.value)); });
+  if (blurSlider) blurSlider.addEventListener('input', function() { applyFloatBlur(parseInt(this.value)); });
+  if (btnReset) btnReset.addEventListener('click', function() {
+    applyFloatOpacity(100); applyFloatBlur(8);
+    if (opSlider) opSlider.value = 100;
+    if (blurSlider) blurSlider.value = 8;
+  });
+}
+/* ====== 全屏切换功能 ====== */
+function initFullscreenToggle() {
+    const btn = document.getElementById('btnFullscreen');
+    let isFullscreen = false;
+
+    function updateBtnText() {
+        isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement);
+        if (isFullscreen) {
+            btn.innerHTML = '<i class="fas fa-compress"></i> 退出全屏';
+        } else {
+            btn.innerHTML = '<i class="fas fa-expand"></i> 全屏';
+        }
+    }
+
+    btn.addEventListener('click', function() {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement) {
+            // 进入全屏
+            const el = document.documentElement;
+            if (el.requestFullscreen) el.requestFullscreen();
+            else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+            else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
+        } else {
+            // 退出全屏
+            if (document.exitFullscreen) document.exitFullscreen();
+            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+        }
+    });
+
+    // 监听全屏变化事件（用户按Esc退出时也更新按钮文字）
+    document.addEventListener('fullscreenchange', updateBtnText);
+    document.addEventListener('webkitfullscreenchange', updateBtnText);
+    document.addEventListener('mozfullscreenchange', updateBtnText);
+}
+/* ====== 程序化页面跳转（新警报/新地震到达时自动切换页面） ====== */
+function switchPage(pageId) {
+const item = document.querySelector('#top-nav-bar .nav-item[data-page="' + pageId + '"]');
+if (!item) return;
+if (pageId === 'page-eew' && DOM.navEew) DOM.navEew.style.display = 'flex';
+item.click();
+}
+/* ====== 修改导航栏切换逻辑（增加地震预警页面支持） ====== */
+function initTopNavBarV2() {
+  const navItems = document.querySelectorAll('#top-nav-bar .nav-item[data-page]');
+  const pages = {};
+  document.querySelectorAll('.panel-page').forEach(p => pages[p.id] = p);
+
+  navItems.forEach(item => {
+    item.addEventListener('click', function() {
+      navItems.forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      const t = this.dataset.page;
+
+      if (t === 'page-earthquake') {
+        DOM.eqHistoryFloat.style.display = 'flex';
+        DOM.eewHistoryFloat.style.display = 'none';
+        DOM.sidePanel.classList.remove('panel-visible');
+        Object.keys(pages).forEach(k => pages[k].classList.remove('active'));
+      } else if (t === 'page-eew') {
+        DOM.eqHistoryFloat.style.display = 'none';
+        DOM.eewHistoryFloat.style.display = 'flex';
+        DOM.sidePanel.classList.remove('panel-visible');
+        Object.keys(pages).forEach(k => pages[k].classList.remove('active'));
+        renderEewList();
+      } else {
+        DOM.eqHistoryFloat.style.display = 'none';
+        DOM.eewHistoryFloat.style.display = 'none';
+        DOM.sidePanel.classList.add('panel-visible');
+        Object.keys(pages).forEach(k => pages[k].classList.toggle('active', k === t));
+        if (t === 'page-apistats') renderApiStats();
+      }
+    });
+  });
+}
+function init() {
+  initDatasourceSettingV2();
+  initMap();
+  initLegend();
+  initEarthquakeModule();
+  initEewModule();
+  initTyphoonModule();
+  initTsunamiModule();
+  initVolcanoModule();
+  initFireModule();
+  initWeatherModule();
+  initTopNavBarV2();
+  initHomeSetting();
+  initAudioSetting();
+initZoomSetting();
+initFullscreenToggle();
+  initSettingsDialog();
+  initFloatSetting();
+  initEewEasterEgg();
+  updateHeaderTime();
+  setInterval(updateHeaderTime, 1000);
+  setInterval(updateDataCount, 5000);
+  setInterval(renderApiStats, 3000);
+  // 初始状态：地震页面激活
+  DOM.eqHistoryFloat.style.display = 'flex';
+  DOM.eewHistoryFloat.style.display = 'none';
+  DOM.sidePanel.classList.remove('panel-visible');
+  setTimeout(function() {
+    var globalLoading = document.getElementById('global-loading-overlay');
+    if (globalLoading) {
+      globalLoading.classList.add('fade-out');
+      setTimeout(function() { globalLoading.style.display = 'none'; }, 300);
+    }
+  }, 100);
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+})();
+</script>
+</body>
+</html>
